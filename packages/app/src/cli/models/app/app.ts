@@ -27,6 +27,13 @@ export const WebConfigurationSchema = zod.object({
   authCallbackPath: zod
     .union([WebConfigurationAuthCallbackPathSchema, WebConfigurationAuthCallbackPathSchema.array()])
     .optional(),
+  appProxy: zod
+    .object({
+      subPathPrefix: zod.string(),
+      subPath: zod.string().optional(),
+      url: zod.string().optional(),
+    })
+    .optional(),
   webhooksPath: zod.preprocess(ensurePathStartsWithSlash, zod.string()).optional(),
   port: zod.number().max(65536).min(0).optional(),
   commands: zod.object({

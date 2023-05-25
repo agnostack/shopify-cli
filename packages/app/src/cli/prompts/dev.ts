@@ -1,5 +1,7 @@
-import {Organization, MinimalOrganizationApp, OrganizationStore} from '../models/organization.js'
+import {generateProxyURL} from '../services/dev/urls.js'
 import {fetchOrgAndApps, OrganizationAppsResponse} from '../services/dev/fetch.js'
+import {Organization, MinimalOrganizationApp, OrganizationStore} from '../models/organization.js'
+import {AppProxy} from '../api/graphql/app.js'
 import {
   renderAutocompletePrompt,
   renderConfirmationPrompt,
@@ -101,7 +103,7 @@ export async function reuseDevConfigPrompt(): Promise<boolean> {
 export function updateURLsPrompt(
   currentAppUrl: string,
   currentRedirectUrls: string[],
-  proxyUrl?: string,
+  currentAppProxy?: AppProxy,
 ): Promise<string> {
   return renderSelectPrompt({
     message: "Have Shopify automatically update your app's URL in order to create a preview experience?",
@@ -114,8 +116,8 @@ export function updateURLsPrompt(
     infoTable: {
       'Current app URL': [currentAppUrl],
       'Current redirect URLs': currentRedirectUrls,
-      ...(proxyUrl && {
-        'Current proxy URL': [proxyUrl],
+      ...(currentAppProxy && {
+        'Current proxy URL': [generateProxyURL(currentAppProxy)],
       }),
     },
   })

@@ -1,3 +1,4 @@
+import {AppProxy} from './app.js'
 import {gql} from 'graphql-request'
 
 export const GetURLsQuery = gql`
@@ -18,16 +19,10 @@ export interface GetURLsQueryVariables {
   apiKey: string
 }
 
-export interface AppProxySchema {
-  subPath: string
-  subPathPrefix: string
-  url: string
-}
-
 export interface GetURLsQuerySchema {
   app: {
     applicationUrl: string
     redirectUrlWhitelist: string[]
-    appProxy?: AppProxySchema
+    appProxy?: AppProxy
   }
 }

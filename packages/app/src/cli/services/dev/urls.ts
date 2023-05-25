@@ -167,6 +167,7 @@ export function generatePartnersURLsData(baseURL: string, partnerURLOptions?: Pa
     redirectUrlWhitelist,
     ...(partnerURLOptions?.appProxy && {
       appProxy: {
+        // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix, but does default to 'apps' when updated
         subPathPrefix: 'apps',
         ...partnerURLOptions?.appProxy,
         url: partnerURLOptions?.appProxy.url ?? baseURL,
@@ -175,25 +176,24 @@ export function generatePartnersURLsData(baseURL: string, partnerURLOptions?: Pa
   }
 }
 
-function transformAppUpdates(data: PartnersURLsData): AppUpdate {
+function generateAppUpdates(data: PartnersURLsData): AppUpdate {
   const {appProxy, ...appUpdates} = data
+
+  const proxyUpdates = {
+    proxyUrl: appProxy?.url,
+    proxySubPath: appProxy?.subPath,
+    // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
+    // proxySubPathPrefix: appProxy?.subPathPrefix,
+  }
 
   return {
     ...appUpdates,
+    ...proxyUpdates,
   }
-  // url: string
-  // subPathPrefix: string
-  // subPath?: string
-  // const {appProxy, ...appUpdates} = urls
-  // const appUpdates = transformAppUpdates(urls)
-  // proxyUrl?: string
-  // proxySubPath?: string
 }
 
 export async function updateURLsData(data: PartnersURLsData, apiKey: string, token: string): Promise<void> {
-  const appUpdates = transformAppUpdates(data)
-
-  const variables: AppUpdateInput = {apiKey, ...appUpdates}
+  const variables: AppUpdateInput = {apiKey, ...generateAppUpdates(data)}
   const query = UpdateAppQuery
   const result: UpdateAppQuerySchema = await partnersRequest(query, token, variables)
   if (result.appUpdate.userErrors.length > 0) {

@@ -1,8 +1,9 @@
+import {setAppInfo} from '../local-storage.js'
 import {updateURLsPrompt} from '../../prompts/dev.js'
 import {AppInterface} from '../../models/app/app.js'
 import {UpdateAppQuery, UpdateAppQuerySchema, AppUpdateInput} from '../../api/graphql/update_app.js'
 import {GetURLsQuery, GetURLsQuerySchema, GetURLsQueryVariables} from '../../api/graphql/get_urls.js'
-import {setAppInfo} from '../local-storage.js'
+import {AppProxy} from '../../api/graphql/app.js'
 import {AbortError, BugError} from '@shopify/cli-kit/node/error'
 import {Config} from '@oclif/core'
 import {getAvailableTCPPort} from '@shopify/cli-kit/node/tcp'
@@ -16,9 +17,14 @@ import {TunnelClient} from '@shopify/cli-kit/node/plugins/tunnel'
 import {outputDebug} from '@shopify/cli-kit/node/output'
 
 export interface PartnersURLs {
-  proxyUrl?: string
+  appProxy?: AppProxy
   applicationUrl: string
   redirectUrlWhitelist: string[]
+}
+
+export interface PatnerURLOptions {
+  authCallbackPath?: string | string[]
+  appProxy?: AppProxy
 }
 
 export interface FrontendURLOptions {
@@ -122,7 +128,23 @@ async function pollTunnelURL(tunnelClient: TunnelClient): Promise<string> {
   })
 }
 
-export function generatePartnersURLs(baseURL: string, authCallbackPath?: string | string[]): PartnersURLs {
+export function generateProxyURL(appProxy: AppProxy | undefined | null): string {
+  return appProxy
+    ? [appProxy.url, appProxy.subPathPrefix, appProxy.subPath]
+        .reduce<string[]>((_proxyUrlParts, proxyUrlPart) => {
+          if (proxyUrlPart) {
+            return [..._proxyUrlParts, proxyUrlPart]
+          }
+
+          return _proxyUrlParts
+        }, [])
+        .join('/')
+    : ''
+}
+
+export function generatePartnersURLs(baseURL: string, partnerURLOptions?: PatnerURLOptions): PartnersURLs {
+  const authCallbackPath = partnerURLOptions?.authCallbackPath
+
   let redirectUrlWhitelist: string[]
   if (authCallbackPath && authCallbackPath.length > 0) {
     const authCallbackPaths = Array.isArray(authCallbackPath) ? authCallbackPath : [authCallbackPath]
@@ -143,6 +165,12 @@ export function generatePartnersURLs(baseURL: string, authCallbackPath?: string 
   return {
     applicationUrl: baseURL,
     redirectUrlWhitelist,
+    ...(partnerURLOptions?.appProxy && {
+      appProxy: {
+        ...partnerURLOptions?.appProxy,
+        url: partnerURLOptions?.appProxy.url ?? baseURL,
+      },
+    }),
   }
 }
 
@@ -160,23 +188,10 @@ export async function getURLs(apiKey: string, token: string): Promise<PartnersUR
   const variables: GetURLsQueryVariables = {apiKey}
   const query = GetURLsQuery
   const result: GetURLsQuerySchema = await partnersRequest(query, token, variables)
-
-  const proxyUrl = result.app.appProxy
-    ? [result.app.appProxy.url, result.app.appProxy.subPathPrefix, result.app.appProxy.subPath]
-        .reduce<string[]>((_proxyUrlParts, proxyUrlPart) => {
-          if (proxyUrlPart) {
-            return [..._proxyUrlParts, proxyUrlPart]
-          }
-
-          return _proxyUrlParts
-        }, [])
-        .join('/')
-    : undefined
-
   return {
     applicationUrl: result.app.applicationUrl,
     redirectUrlWhitelist: result.app.redirectUrlWhitelist,
-    proxyUrl,
+    appProxy: result.app.appProxy,
   }
 }
 
@@ -194,7 +209,7 @@ export async function shouldOrPromptUpdateURLs(options: ShouldOrPromptUpdateURLs
     const response = await updateURLsPrompt(
       options.currentURLs.applicationUrl,
       options.currentURLs.redirectUrlWhitelist,
-      options.currentURLs.proxyUrl,
+      options.currentURLs.appProxy,
     )
     let newUpdateURLs: boolean | undefined
     /* eslint-disable no-fallthrough */

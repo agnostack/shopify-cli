@@ -435,27 +435,93 @@ describe('generatePartnersURLs', () => {
     })
   })
 
-  test('Returns just the override value when set as a string', () => {
+  test('Returns just the callback override value when set as a string', () => {
     const applicationUrl = 'http://my-base-url'
-    const overridePath = '/my/custom/path'
+    const overrideCallbackPath = '/my/custom/path'
 
-    const got = generatePartnersURLs(applicationUrl, overridePath)
+    const got = generatePartnersURLs(applicationUrl, {
+      authCallbackPath: overrideCallbackPath,
+    })
 
     expect(got).toMatchObject({
       applicationUrl,
-      redirectUrlWhitelist: [`${applicationUrl}${overridePath}`],
+      redirectUrlWhitelist: [`${applicationUrl}${overrideCallbackPath}`],
     })
   })
 
-  test('Returns just the override values when set as an array', () => {
+  test('Returns just the callback override values when set as an array', () => {
     const applicationUrl = 'http://my-base-url'
-    const overridePath = ['/my/custom/path1', '/my/custom/path2']
+    const overrideCallbackPaths = ['/my/custom/path1', '/my/custom/path2']
 
-    const got = generatePartnersURLs(applicationUrl, overridePath)
+    const got = generatePartnersURLs(applicationUrl, {
+      authCallbackPath: overrideCallbackPaths,
+    })
 
     expect(got).toMatchObject({
       applicationUrl,
-      redirectUrlWhitelist: [`${applicationUrl}${overridePath[0]}`, `${applicationUrl}${overridePath[1]}`],
+      redirectUrlWhitelist: [
+        `${applicationUrl}${overrideCallbackPaths[0]}`,
+        `${applicationUrl}${overrideCallbackPaths[1]}`,
+      ],
+    })
+  })
+
+  test('Returns just the proxy override subPathPrefix when set', () => {
+    const applicationUrl = 'http://my-base-url'
+    const appProxy = {
+      url: applicationUrl,
+      subPathPrefix: 'apps',
+    }
+
+    const got = generatePartnersURLs(applicationUrl, {
+      appProxy,
+    })
+
+    expect(got).toMatchObject({
+      applicationUrl,
+      appProxy,
+    })
+  })
+
+  test('Returns the proxy overrides when set', () => {
+    const applicationUrl = 'http://my-base-url'
+    const appProxy = {
+      url: 'http://my-proxy-url',
+      subPathPrefix: 'apps',
+      subPath: 'proxy',
+    }
+
+    const got = generatePartnersURLs(applicationUrl, {
+      appProxy,
+    })
+
+    expect(got).toMatchObject({
+      applicationUrl,
+      appProxy,
+    })
+  })
+
+  test('Returns the proxy and callback overrides when set', () => {
+    const applicationUrl = 'http://my-base-url'
+    const overrideCallbackPaths = ['/my/custom/path1', '/my/custom/path2']
+    const appProxy = {
+      url: 'http://my-proxy-url',
+      subPathPrefix: 'apps',
+      subPath: 'proxy',
+    }
+
+    const got = generatePartnersURLs(applicationUrl, {
+      appProxy,
+      authCallbackPath: overrideCallbackPaths,
+    })
+
+    expect(got).toMatchObject({
+      applicationUrl,
+      appProxy,
+      redirectUrlWhitelist: [
+        `${applicationUrl}${overrideCallbackPaths[0]}`,
+        `${applicationUrl}${overrideCallbackPaths[1]}`,
+      ],
     })
   })
 })

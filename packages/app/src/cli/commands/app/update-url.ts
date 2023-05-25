@@ -1,5 +1,5 @@
 import Command from '../../utilities/app-command.js'
-import updateURL, {UpdateURLOptions} from '../../services/app/update-url.js'
+import updateURLData, {UpdateURLOptions} from '../../services/app/update-url.js'
 import {Flags} from '@oclif/core'
 import {globalFlags} from '@shopify/cli-kit/node/cli'
 
@@ -32,6 +32,6 @@ export default class UpdateURL extends Command {
       appURL: flags['app-url'],
       redirectURLs: flags['redirect-urls']?.split(','),
     }
-    await updateURL(options)
+    await updateURLData(options)
   }
 }

@@ -25,13 +25,15 @@ export const UpdateAppQuery = gql`
   }
 `
 
-export interface AppUpdateInput {
-  apiKey: string
+export interface AppUpdate {
   applicationUrl: string
   proxyUrl?: string
   proxySubPath?: string
   redirectUrlWhitelist: string[]
-  title?: string
+}
+
+export interface AppUpdateInput extends AppUpdate {
+  apiKey: string
 }
 
 export interface UpdateAppQuerySchema {

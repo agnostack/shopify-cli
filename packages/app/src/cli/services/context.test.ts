@@ -211,7 +211,7 @@ describe('ensureDevContext', () => {
       storeFqdn: STORE1.shopDomain,
       remoteAppUpdated: true,
       useCloudflareTunnels: true,
-      updateURLs: undefined,
+      updateURLsData: undefined,
     })
     expect(setAppInfo).toHaveBeenNthCalledWith(1, {
       appId: APP1.apiKey,
@@ -241,7 +241,7 @@ describe('ensureDevContext', () => {
       storeFqdn: STORE1.shopDomain,
       remoteAppUpdated: true,
       useCloudflareTunnels: false,
-      updateURLs: undefined,
+      updateURLsData: undefined,
     })
   })
 
@@ -261,7 +261,7 @@ describe('ensureDevContext', () => {
       storeFqdn: STORE1.shopDomain,
       remoteAppUpdated: false,
       useCloudflareTunnels: true,
-      updateURLs: undefined,
+      updateURLsData: undefined,
     })
     expect(fetchOrganizations).not.toBeCalled()
     expect(selectOrganizationPrompt).not.toBeCalled()
@@ -292,7 +292,7 @@ describe('ensureDevContext', () => {
       storeFqdn: STORE1.shopDomain,
       remoteAppUpdated: true,
       useCloudflareTunnels: true,
-      updateURLs: undefined,
+      updateURLsData: undefined,
     })
     expect(setAppInfo).toHaveBeenNthCalledWith(1, {
       appId: APP2.apiKey,

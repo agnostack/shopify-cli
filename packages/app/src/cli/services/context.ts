@@ -47,7 +47,7 @@ interface DevContextOutput {
   remoteApp: Omit<OrganizationApp, 'apiSecretKeys'> & {apiSecret?: string}
   remoteAppUpdated: boolean
   storeFqdn: string
-  updateURLs: boolean | undefined
+  updateURLsData: boolean | undefined
   useCloudflareTunnels: boolean
 }
 
@@ -228,7 +228,7 @@ function buildOutput(
     },
     remoteAppUpdated: app.apiKey !== cachedInfo?.appId,
     storeFqdn: store.shopDomain,
-    updateURLs: cachedInfo?.updateURLs,
+    updateURLsData: cachedInfo?.updateURLsData,
     useCloudflareTunnels,
   }
 }
@@ -463,14 +463,14 @@ async function selectOrg(token: string): Promise<string> {
  * @param store - Store domain
  */
 function showReusedValues(org: string, cachedAppInfo: CachedAppInfo, packageManager: PackageManager): void {
-  let updateURLs = 'Not yet configured'
-  if (cachedAppInfo.updateURLs !== undefined) updateURLs = cachedAppInfo.updateURLs ? 'Always' : 'Never'
+  let updateURLsData = 'Not yet configured'
+  if (cachedAppInfo.updateURLsData !== undefined) updateURLsData = cachedAppInfo.updateURLsData ? 'Always' : 'Never'
 
   const items = [
     `Org:          ${org}`,
     `App:          ${cachedAppInfo.title}`,
     `Dev store:    ${cachedAppInfo.storeFqdn}`,
-    `Update URLs:  ${updateURLs}`,
+    `Update URLs:  ${updateURLsData}`,
   ]
 
   if (cachedAppInfo.tunnelPlugin) items.push(`Tunnel:       ${cachedAppInfo.tunnelPlugin}`)

@@ -246,6 +246,35 @@ describe('updateURLsPrompt', () => {
       ],
     })
   })
+
+  test('asks about the URL update and proxy URL update and shows 4 different options', async () => {
+    // Given
+    vi.mocked(renderSelectPrompt).mockResolvedValue('always')
+
+    // When
+    const got = await updateURLsPrompt(
+      'http://current-url',
+      ['http://current-redirect-url1', 'http://current-redirect-url2'],
+      'http://current-url/apps/proxy',
+    )
+
+    // Then
+    expect(got).toEqual('always')
+    expect(renderSelectPrompt).toHaveBeenCalledWith({
+      message: `Have Shopify automatically update your app's URL in order to create a preview experience?`,
+      infoTable: {
+        'Current app URL': ['http://current-url'],
+        'Current redirect URLs': ['http://current-redirect-url1', 'http://current-redirect-url2'],
+        'Current proxy URL': ['http://current-url/apps/proxy'],
+      },
+      choices: [
+        {label: 'Always by default', value: 'always'},
+        {label: 'Yes, this time', value: 'yes'},
+        {label: 'No, not now', value: 'no'},
+        {label: `Never, don't ask again`, value: 'never'},
+      ],
+    })
+  })
 })
 
 describe('tunnelConfigurationPrompt', () => {

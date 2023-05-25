@@ -98,7 +98,11 @@ export async function reuseDevConfigPrompt(): Promise<boolean> {
   })
 }
 
-export function updateURLsPrompt(currentAppUrl: string, currentRedirectUrls: string[]): Promise<string> {
+export function updateURLsPrompt(
+  currentAppUrl: string,
+  currentRedirectUrls: string[],
+  proxyUrl?: string,
+): Promise<string> {
   return renderSelectPrompt({
     message: "Have Shopify automatically update your app's URL in order to create a preview experience?",
     choices: [
@@ -110,6 +114,9 @@ export function updateURLsPrompt(currentAppUrl: string, currentRedirectUrls: str
     infoTable: {
       'Current app URL': [currentAppUrl],
       'Current redirect URLs': currentRedirectUrls,
+      ...(proxyUrl && {
+        'Current proxy URL': [proxyUrl],
+      }),
     },
   })
 }

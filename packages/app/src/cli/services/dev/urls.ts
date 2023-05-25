@@ -229,21 +229,21 @@ export async function shouldOrPromptUpdateURLs(options: ShouldOrPromptUpdateURLs
       options.currentURLsData.redirectUrlWhitelist,
       options.currentURLsData.appProxy,
     )
-    let newUpdateURLs: boolean | undefined
+    let newUpdateURLsData: boolean | undefined
     /* eslint-disable no-fallthrough */
     switch (response) {
       case 'always':
-        newUpdateURLs = true
+        newUpdateURLsData = true
       case 'yes':
         shouldUpdate = true
         break
       case 'never':
-        newUpdateURLs = false
+        newUpdateURLsData = false
       case 'no':
         shouldUpdate = false
     }
     /* eslint-enable no-fallthrough */
-    setAppInfo({directory: options.appDirectory, updateURLData: newUpdateURLs})
+    setAppInfo({directory: options.appDirectory, updateURLsData: newUpdateURLsData})
   }
   return shouldUpdate
 }

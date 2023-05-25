@@ -1,6 +1,6 @@
 import {updateURLsPrompt} from '../../prompts/dev.js'
 import {AppInterface} from '../../models/app/app.js'
-import {UpdateURLsQuery, UpdateURLsQuerySchema, UpdateURLsQueryVariables} from '../../api/graphql/update_urls.js'
+import {UpdateAppQuery, UpdateAppQuerySchema, AppUpdateInput} from '../../api/graphql/update_app.js'
 import {GetURLsQuery, GetURLsQuerySchema, GetURLsQueryVariables} from '../../api/graphql/get_urls.js'
 import {setAppInfo} from '../local-storage.js'
 import {AbortError, BugError} from '@shopify/cli-kit/node/error'
@@ -16,6 +16,7 @@ import {TunnelClient} from '@shopify/cli-kit/node/plugins/tunnel'
 import {outputDebug} from '@shopify/cli-kit/node/output'
 
 export interface PartnersURLs {
+  proxyUrl?: string
   applicationUrl: string
   redirectUrlWhitelist: string[]
 }
@@ -146,9 +147,9 @@ export function generatePartnersURLs(baseURL: string, authCallbackPath?: string 
 }
 
 export async function updateURLs(urls: PartnersURLs, apiKey: string, token: string): Promise<void> {
-  const variables: UpdateURLsQueryVariables = {apiKey, ...urls}
-  const query = UpdateURLsQuery
-  const result: UpdateURLsQuerySchema = await partnersRequest(query, token, variables)
+  const variables: AppUpdateInput = {apiKey, ...urls}
+  const query = UpdateAppQuery
+  const result: UpdateAppQuerySchema = await partnersRequest(query, token, variables)
   if (result.appUpdate.userErrors.length > 0) {
     const errors = result.appUpdate.userErrors.map((error) => error.message).join(', ')
     throw new AbortError(errors)
@@ -159,7 +160,24 @@ export async function getURLs(apiKey: string, token: string): Promise<PartnersUR
   const variables: GetURLsQueryVariables = {apiKey}
   const query = GetURLsQuery
   const result: GetURLsQuerySchema = await partnersRequest(query, token, variables)
-  return {applicationUrl: result.app.applicationUrl, redirectUrlWhitelist: result.app.redirectUrlWhitelist}
+
+  const proxyUrl = result.app.appProxy
+    ? [result.app.appProxy.url, result.app.appProxy.subPathPrefix, result.app.appProxy.subPath]
+        .reduce<string[]>((_proxyUrlParts, proxyUrlPart) => {
+          if (proxyUrlPart) {
+            return [..._proxyUrlParts, proxyUrlPart]
+          }
+
+          return _proxyUrlParts
+        }, [])
+        .join('/')
+    : undefined
+
+  return {
+    applicationUrl: result.app.applicationUrl,
+    redirectUrlWhitelist: result.app.redirectUrlWhitelist,
+    proxyUrl,
+  }
 }
 
 export interface ShouldOrPromptUpdateURLsOptions {
@@ -176,6 +194,7 @@ export async function shouldOrPromptUpdateURLs(options: ShouldOrPromptUpdateURLs
     const response = await updateURLsPrompt(
       options.currentURLs.applicationUrl,
       options.currentURLs.redirectUrlWhitelist,
+      options.currentURLs.proxyUrl,
     )
     let newUpdateURLs: boolean | undefined
     /* eslint-disable no-fallthrough */

@@ -9,7 +9,7 @@ import {
   FrontendURLOptions,
 } from './urls.js'
 import {testApp} from '../../models/app/app.test-data.js'
-import {UpdateURLsQuery} from '../../api/graphql/update_urls.js'
+import {UpdateAppQuery} from '../../api/graphql/update_app.js'
 import {GetURLsQuery} from '../../api/graphql/get_urls.js'
 import {setAppInfo} from '../local-storage.js'
 import {beforeEach, describe, expect, vi, test} from 'vitest'
@@ -74,7 +74,31 @@ describe('updateURLs', () => {
     await updateURLs(urls, 'apiKey', 'token')
 
     // Then
-    expect(partnersRequest).toHaveBeenCalledWith(UpdateURLsQuery, 'token', expectedVariables)
+    expect(partnersRequest).toHaveBeenCalledWith(UpdateAppQuery, 'token', expectedVariables)
+  })
+
+  test('sends a request to update the URLs and Proxy URL', async () => {
+    // Given
+    vi.mocked(partnersRequest).mockResolvedValueOnce({appUpdate: {userErrors: []}})
+    const urls = {
+      applicationUrl: 'https://example.com',
+      proxyUrl: 'https://example.com',
+      redirectUrlWhitelist: [
+        'https://example.com/auth/callback',
+        'https://example.com/auth/shopify/callback',
+        'https://example.com/api/auth/callback',
+      ],
+    }
+    const expectedVariables = {
+      apiKey: 'apiKey',
+      ...urls,
+    }
+
+    // When
+    await updateURLs(urls, 'apiKey', 'token')
+
+    // Then
+    expect(partnersRequest).toHaveBeenCalledWith(UpdateAppQuery, 'token', expectedVariables)
   })
 
   test('throws an error if requests has a user error', async () => {

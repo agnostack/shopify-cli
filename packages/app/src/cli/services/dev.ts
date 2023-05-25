@@ -1,11 +1,11 @@
 import {ensureDevContext} from './context.js'
 import {
   generateFrontendURL,
-  generatePartnersURLs,
-  getURLs,
+  generatePartnersURLsData,
+  getURLsData,
   shouldOrPromptUpdateURLs,
   startTunnelPlugin,
-  updateURLs,
+  updateURLsData,
 } from './dev/urls.js'
 import {installAppDependencies} from './dependencies.js'
 import {devUIExtensions} from './dev/extension.js'
@@ -91,7 +91,7 @@ async function dev(options: DevOptions) {
     storeFqdn,
     remoteApp,
     remoteAppUpdated,
-    updateURLs: cachedUpdateURLs,
+    updateURLsData: cachedUpdateURLsData,
     useCloudflareTunnels,
   } = await ensureDevContext(options, token)
 
@@ -115,18 +115,18 @@ async function dev(options: DevOptions) {
   const sendUninstallWebhook = Boolean(webhooksPath) && remoteAppUpdated
 
   const initiateUpdateUrls = (frontendConfig || backendConfig) && options.update
-  let shouldUpdateURLs = false
+  let shouldUpdateURLsData = false
 
   await validateCustomPorts(backendConfig, frontendConfig)
 
-  const [{frontendUrl, frontendPort, usingLocalhost}, backendPort, currentURLs] = await Promise.all([
+  const [{frontendUrl, frontendPort, usingLocalhost}, backendPort, currentURLsData] = await Promise.all([
     generateFrontendURL({
       ...options,
       app: localApp,
       tunnelClient,
     }),
     getBackendPort() || backendConfig?.configuration.port || getAvailableTCPPort(),
-    getURLs(apiKey, token),
+    getURLsData(apiKey, token),
   ])
 
   /** If the app doesn't have web/ the link message is not necessary */
@@ -135,15 +135,19 @@ async function dev(options: DevOptions) {
   const proxyPort = usingLocalhost ? await getAvailableTCPPort() : frontendPort
   const proxyUrl = usingLocalhost ? `${frontendUrl}:${proxyPort}` : frontendUrl
 
-  const appProxyUrl = backendConfig?.configuration.appProxy?.url ?? frontendConfig?.configuration.appProxy?.url
-  const appProxySubPathPrefix =
-    backendConfig?.configuration.appProxy?.subPathPrefix ?? frontendConfig?.configuration.appProxy?.subPathPrefix
+  // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
+  // const appProxySubPathPrefix =
+  //   backendConfig?.configuration.appProxy?.subPathPrefix ?? frontendConfig?.configuration.appProxy?.subPathPrefix
   const appProxySubPath =
     backendConfig?.configuration.appProxy?.subPath ?? frontendConfig?.configuration.appProxy?.subPath
-  const appProxy = appProxySubPathPrefix
+  const appProxyUrl = backendConfig?.configuration.appProxy?.url ?? frontendConfig?.configuration.appProxy?.url
+  const appProxy = backendConfig?.configuration
     ? {
-        url: appProxyUrl ?? proxyUrl,
-        subPathPrefix: appProxySubPathPrefix,
+        ...(appProxyUrl && {
+          url: appProxyUrl,
+        }),
+        // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
+        // subPathPrefix: appProxySubPathPrefix,
         ...(appProxySubPath && {
           subPath: appProxySubPath,
         }),
@@ -153,20 +157,20 @@ async function dev(options: DevOptions) {
   let previewUrl
 
   if (initiateUpdateUrls) {
-    const newURLs = generatePartnersURLs(exposedUrl, {
+    const newURLsData = generatePartnersURLsData(exposedUrl, {
       authCallbackPath: backendConfig?.configuration.authCallbackPath ?? frontendConfig?.configuration.authCallbackPath,
       ...(appProxy && {
         appProxy,
       }),
     })
-    shouldUpdateURLs = await shouldOrPromptUpdateURLs({
-      currentURLs,
+    shouldUpdateURLsData = await shouldOrPromptUpdateURLs({
+      currentURLsData,
       appDirectory: localApp.directory,
-      cachedUpdateURLs,
+      cachedUpdateURLs: cachedUpdateURLsData,
       newApp: remoteApp.newApp,
     })
-    if (shouldUpdateURLs) await updateURLs(newURLs, apiKey, token)
-    await outputUpdateURLsResult(shouldUpdateURLs, newURLs, remoteApp)
+    if (shouldUpdateURLsData) await updateURLsData(newURLsData, apiKey, token)
+    await outputUpdateURLsResult(shouldUpdateURLsData, newURLsData, remoteApp)
     previewUrl = buildAppURLForWeb(storeFqdn, exposedUrl)
   }
 
@@ -289,7 +293,12 @@ async function dev(options: DevOptions) {
     })
   }
 
-  await logMetadataForDev({devOptions: options, tunnelUrl: frontendUrl, shouldUpdateURLs, storeFqdn})
+  await logMetadataForDev({
+    devOptions: options,
+    tunnelUrl: frontendUrl,
+    shouldUpdateURLsData,
+    storeFqdn,
+  })
 
   await reportAnalyticsEvent({config: options.commandConfig})
 
@@ -519,14 +528,14 @@ async function buildCartURLIfNeeded(extensions: UIExtension[], store: string, ch
 async function logMetadataForDev(options: {
   devOptions: DevOptions
   tunnelUrl: string
-  shouldUpdateURLs: boolean
+  shouldUpdateURLsData: boolean
   storeFqdn: string
 }) {
   const tunnelType = await getAnalyticsTunnelType(options.devOptions.commandConfig, options.tunnelUrl)
   await metadata.addPublicMetadata(() => ({
     cmd_dev_tunnel_type: tunnelType,
     cmd_dev_tunnel_custom_hash: tunnelType === 'custom' ? hashString(options.tunnelUrl) : undefined,
-    cmd_dev_urls_updated: options.shouldUpdateURLs,
+    cmd_dev_urls_updated: options.shouldUpdateURLsData,
     store_fqdn_hash: hashString(options.storeFqdn),
     cmd_app_dependency_installation_skipped: options.devOptions.skipDependenciesInstallation,
     cmd_app_reset_used: options.devOptions.reset,

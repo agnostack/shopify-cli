@@ -135,13 +135,30 @@ async function dev(options: DevOptions) {
   const proxyPort = usingLocalhost ? await getAvailableTCPPort() : frontendPort
   const proxyUrl = usingLocalhost ? `${frontendUrl}:${proxyPort}` : frontendUrl
 
+  const appProxyUrl = backendConfig?.configuration.appProxy?.url ?? frontendConfig?.configuration.appProxy?.url
+  const appProxySubPathPrefix =
+    backendConfig?.configuration.appProxy?.subPathPrefix ?? frontendConfig?.configuration.appProxy?.subPathPrefix
+  const appProxySubPath =
+    backendConfig?.configuration.appProxy?.subPath ?? frontendConfig?.configuration.appProxy?.subPath
+  const appProxy = appProxySubPathPrefix
+    ? {
+        url: appProxyUrl ?? proxyUrl,
+        subPathPrefix: appProxySubPathPrefix,
+        ...(appProxySubPath && {
+          subPath: appProxySubPath,
+        }),
+      }
+    : undefined
+
   let previewUrl
 
   if (initiateUpdateUrls) {
-    const newURLs = generatePartnersURLs(
-      exposedUrl,
-      backendConfig?.configuration.authCallbackPath ?? frontendConfig?.configuration.authCallbackPath,
-    )
+    const newURLs = generatePartnersURLs(exposedUrl, {
+      authCallbackPath: backendConfig?.configuration.authCallbackPath ?? frontendConfig?.configuration.authCallbackPath,
+      ...(appProxy && {
+        appProxy,
+      }),
+    })
     shouldUpdateURLs = await shouldOrPromptUpdateURLs({
       currentURLs,
       appDirectory: localApp.directory,

@@ -1,6 +1,6 @@
-import updateURL, {UpdateURLOptions} from './update-url.js'
+import updateURLData, {UpdateURLOptions} from './update-url.js'
 import {selectApp} from './select-app.js'
-import {getURLs, updateURLs} from '../dev/urls.js'
+import {getURLsData, updateURLsData} from '../dev/urls.js'
 import {OrganizationApp} from '../../models/organization.js'
 import {allowedRedirectionURLsPrompt, appUrlPrompt} from '../../prompts/update-url.js'
 import {describe, vi, beforeEach, expect, test} from 'vitest'
@@ -34,10 +34,10 @@ describe('update-url', () => {
     }
 
     // When
-    await updateURL(options)
+    await updateURLData(options)
 
     // Then
-    expect(updateURLs).toHaveBeenCalledWith(
+    expect(updateURLsData).toHaveBeenCalledWith(
       {
         applicationUrl: 'https://example.com',
         redirectUrlWhitelist: ['https://example.com/callback'],
@@ -56,10 +56,10 @@ describe('update-url', () => {
     }
 
     // When
-    await updateURL(options)
+    await updateURLData(options)
 
     // Then
-    expect(updateURLs).toHaveBeenCalledWith(
+    expect(updateURLsData).toHaveBeenCalledWith(
       {
         applicationUrl: 'https://example.com',
         redirectUrlWhitelist: ['https://example.com/callback'],
@@ -71,7 +71,7 @@ describe('update-url', () => {
 
   test('asks for the app URL when not provided as a flag', async () => {
     // Given
-    vi.mocked(getURLs).mockResolvedValue({applicationUrl: 'https://example.com', redirectUrlWhitelist: []})
+    vi.mocked(getURLsData).mockResolvedValue({applicationUrl: 'https://example.com', redirectUrlWhitelist: []})
     vi.mocked(appUrlPrompt).mockResolvedValue('https://myapp.example.com')
     const options: UpdateURLOptions = {
       apiKey: 'api-key-from-flag',
@@ -79,10 +79,10 @@ describe('update-url', () => {
     }
 
     // When
-    await updateURL(options)
+    await updateURLData(options)
 
     // Then
-    expect(updateURLs).toHaveBeenCalledWith(
+    expect(updateURLsData).toHaveBeenCalledWith(
       {
         applicationUrl: 'https://myapp.example.com',
         redirectUrlWhitelist: ['https://example.com/callback'],
@@ -94,7 +94,7 @@ describe('update-url', () => {
 
   test('asks for the redirection URLs when not provided as a flag', async () => {
     // Given
-    vi.mocked(getURLs).mockResolvedValue({applicationUrl: 'https://example.com', redirectUrlWhitelist: []})
+    vi.mocked(getURLsData).mockResolvedValue({applicationUrl: 'https://example.com', redirectUrlWhitelist: []})
     vi.mocked(allowedRedirectionURLsPrompt).mockResolvedValue([
       'https://example.com/callback1',
       'https://example.com/callback2',
@@ -105,10 +105,10 @@ describe('update-url', () => {
     }
 
     // When
-    await updateURL(options)
+    await updateURLData(options)
 
     // Then
-    expect(updateURLs).toHaveBeenCalledWith(
+    expect(updateURLsData).toHaveBeenCalledWith(
       {
         applicationUrl: 'https://example.com',
         redirectUrlWhitelist: ['https://example.com/callback1', 'https://example.com/callback2'],

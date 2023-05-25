@@ -1,6 +1,7 @@
 import {selectApp} from './select-app.js'
-import {getURLs, PartnersURLs, updateURLs, validatePartnersURLs} from '../dev/urls.js'
+import {getURLsData, updateURLsData, validatePartnersURLsData, PartnersURLsData} from '../dev/urls.js'
 import {allowedRedirectionURLsPrompt, appUrlPrompt} from '../../prompts/update-url.js'
+import {AppProxyUpdate} from '../../api/graphql/app.js'
 import {ensureAuthenticatedPartners} from '@shopify/cli-kit/node/session'
 import {renderSuccess} from '@shopify/cli-kit/node/ui'
 
@@ -8,33 +9,39 @@ export interface UpdateURLOptions {
   apiKey?: string
   appURL?: string
   redirectURLs?: string[]
+  appProxy?: AppProxyUpdate
 }
 
-export default async function updateURL(options: UpdateURLOptions): Promise<void> {
+export default async function updateURLData(options: UpdateURLOptions): Promise<void> {
   const token = await ensureAuthenticatedPartners()
   const apiKey = options.apiKey || (await selectApp()).apiKey
-  const newURLs = await getNewURLs(token, apiKey, {appURL: options.appURL, redirectURLs: options.redirectURLs})
-  await updateURLs(newURLs, apiKey, token)
-  printResult(newURLs)
+  const newURLData = await getNewURLData(token, apiKey, {
+    appURL: options.appURL,
+    redirectURLs: options.redirectURLs,
+    appProxy: options.appProxy,
+  })
+  await updateURLsData(newURLData, apiKey, token)
+  printResult(newURLData)
 }
 
-async function getNewURLs(token: string, apiKey: string, options: UpdateURLOptions): Promise<PartnersURLs> {
-  const currentURLs: PartnersURLs = await getURLs(apiKey, token)
-  const newURLs: PartnersURLs = {
-    applicationUrl: options.appURL || (await appUrlPrompt(currentURLs.applicationUrl)),
+// HMMM: add prompt for data
+async function getNewURLData(token: string, apiKey: string, options: UpdateURLOptions): Promise<PartnersURLsData> {
+  const currentURLData: PartnersURLsData = await getURLsData(apiKey, token)
+  const newURLData: PartnersURLsData = {
+    applicationUrl: options.appURL || (await appUrlPrompt(currentURLData.applicationUrl)),
     redirectUrlWhitelist:
-      options.redirectURLs || (await allowedRedirectionURLsPrompt(currentURLs.redirectUrlWhitelist.join(','))),
+      options.redirectURLs || (await allowedRedirectionURLsPrompt(currentURLData.redirectUrlWhitelist.join(','))),
   }
-  validatePartnersURLs(newURLs)
-  return newURLs
+  validatePartnersURLsData(newURLData)
+  return newURLData
 }
 
-function printResult(urls: PartnersURLs): void {
+function printResult(data: PartnersURLsData): void {
   renderSuccess({
     headline: 'App URLs updated.',
     customSections: [
-      {title: 'App URL', body: {list: {items: [urls.applicationUrl]}}},
-      {title: 'Allowed redirection URL(s)', body: {list: {items: urls.redirectUrlWhitelist}}},
+      {title: 'App URL', body: {list: {items: [data.applicationUrl]}}},
+      {title: 'Allowed redirection URL(s)', body: {list: {items: data.redirectUrlWhitelist}}},
     ],
   })
 }

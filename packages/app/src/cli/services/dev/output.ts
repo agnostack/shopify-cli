@@ -1,4 +1,4 @@
-import {PartnersURLs} from './urls.js'
+import {PartnersURLData} from './urls.js'
 import {AppInterface} from '../../models/app/app.js'
 import {FunctionExtension, ThemeExtension} from '../../models/app/extensions.js'
 import {OrganizationApp} from '../../models/organization.js'
@@ -8,13 +8,13 @@ import {outputContent, outputInfo, outputToken} from '@shopify/cli-kit/node/outp
 
 export async function outputUpdateURLsResult(
   updated: boolean,
-  urls: PartnersURLs,
+  data: PartnersURLData,
   app: Omit<OrganizationApp, 'apiSecretKeys' | 'apiKey'> & {apiSecret?: string},
 ) {
   const dashboardURL = await partnersURL(app.organizationId, app.id)
   if (app.newApp) {
     renderInfo({
-      headline: `For your convenience, we've given your app a default URL: ${urls.applicationUrl}.`,
+      headline: `For your convenience, we've given your app a default URL: ${data.applicationUrl}.`,
       body: [
         "You can update your app's URL anytime in the",
         dashboardURL,
@@ -28,7 +28,7 @@ export async function outputUpdateURLsResult(
         dashboardURL,
         {char: ':'},
         '\n\n',
-        {list: {items: urls.redirectUrlWhitelist}},
+        {list: {items: data.redirectUrlWhitelist}},
       ],
     })
   }

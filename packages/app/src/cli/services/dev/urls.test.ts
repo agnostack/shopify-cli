@@ -1,11 +1,11 @@
 import {
-  updateURLs,
-  getURLs,
+  updateURLsData,
+  getURLsData,
   shouldOrPromptUpdateURLs,
   generateFrontendURL,
-  generatePartnersURLs,
-  PartnersURLs,
-  validatePartnersURLs,
+  generatePartnersURLsData,
+  validatePartnersURLsData,
+  PartnersURLsData,
   FrontendURLOptions,
 } from './urls.js'
 import {testApp} from '../../models/app/app.test-data.js'
@@ -53,7 +53,7 @@ const defaultOptions: FrontendURLOptions = {
   },
 }
 
-describe('updateURLs', () => {
+describe('updateURLsData', () => {
   test('sends a request to update the URLs', async () => {
     // Given
     vi.mocked(partnersRequest).mockResolvedValueOnce({appUpdate: {userErrors: []}})
@@ -71,12 +71,13 @@ describe('updateURLs', () => {
     }
 
     // When
-    await updateURLs(urls, 'apiKey', 'token')
+    await updateURLsData(urls, 'apiKey', 'token')
 
     // Then
     expect(partnersRequest).toHaveBeenCalledWith(UpdateAppQuery, 'token', expectedVariables)
   })
 
+  // TODO: add test on proxyPath as well??
   test('sends a request to update the URLs and Proxy URL', async () => {
     // Given
     vi.mocked(partnersRequest).mockResolvedValueOnce({appUpdate: {userErrors: []}})
@@ -95,7 +96,7 @@ describe('updateURLs', () => {
     }
 
     // When
-    await updateURLs(urls, 'apiKey', 'token')
+    await updateURLsData(urls, 'apiKey', 'token')
 
     // Then
     expect(partnersRequest).toHaveBeenCalledWith(UpdateAppQuery, 'token', expectedVariables)
@@ -110,14 +111,14 @@ describe('updateURLs', () => {
     }
 
     // When
-    const got = updateURLs(urls, 'apiKey', 'token')
+    const got = updateURLsData(urls, 'apiKey', 'token')
 
     // Then
     await expect(got).rejects.toThrow(new AbortError(`Boom!`))
   })
 })
 
-describe('getURLs', () => {
+describe('getURLsData', () => {
   test('sends a request to get the URLs', async () => {
     // Given
     vi.mocked(partnersRequest).mockResolvedValueOnce({
@@ -126,7 +127,7 @@ describe('getURLs', () => {
     const expectedVariables = {apiKey: 'apiKey'}
 
     // When
-    await getURLs('apiKey', 'token')
+    await getURLsData('apiKey', 'token')
 
     // Then
     expect(partnersRequest).toHaveBeenCalledWith(GetURLsQuery, 'token', expectedVariables)
@@ -134,7 +135,7 @@ describe('getURLs', () => {
 })
 
 describe('shouldOrPromptUpdateURLs', () => {
-  const currentURLs = {
+  const currentURLsData = {
     applicationUrl: 'https://example.com/home',
     redirectUrlWhitelist: ['https://example.com/auth/callback'],
   }
@@ -142,7 +143,7 @@ describe('shouldOrPromptUpdateURLs', () => {
   test('returns true if the app is new', async () => {
     // Given
     const options = {
-      currentURLs,
+      currentURLsData,
       appDirectory: '/path',
       newApp: true,
     }
@@ -157,7 +158,7 @@ describe('shouldOrPromptUpdateURLs', () => {
   test('returns true if the cached value is true (always)', async () => {
     // Given
     const options = {
-      currentURLs,
+      currentURLsData,
       appDirectory: '/path',
       cachedUpdateURLs: true,
     }
@@ -172,7 +173,7 @@ describe('shouldOrPromptUpdateURLs', () => {
   test('returns false if the cached value is false (never)', async () => {
     // Given
     const options = {
-      currentURLs,
+      currentURLsData,
       appDirectory: '/path',
       cachedUpdateURLs: false,
     }
@@ -187,7 +188,7 @@ describe('shouldOrPromptUpdateURLs', () => {
   test('returns true when the user selects always', async () => {
     // Given
     const options = {
-      currentURLs,
+      currentURLsData,
       appDirectory: '/path',
     }
     vi.mocked(renderSelectPrompt).mockResolvedValue('always')
@@ -202,7 +203,7 @@ describe('shouldOrPromptUpdateURLs', () => {
   test('returns true when the user selects yes', async () => {
     // Given
     const options = {
-      currentURLs,
+      currentURLsData,
       appDirectory: '/path',
     }
     vi.mocked(renderSelectPrompt).mockResolvedValue('yes')
@@ -217,7 +218,7 @@ describe('shouldOrPromptUpdateURLs', () => {
   test('returns false when the user selects never', async () => {
     // Given
     const options = {
-      currentURLs,
+      currentURLsData,
       appDirectory: '/path',
     }
     vi.mocked(renderSelectPrompt).mockResolvedValue('never')
@@ -232,7 +233,7 @@ describe('shouldOrPromptUpdateURLs', () => {
   test('returns false when the user selects no', async () => {
     // Given
     const options = {
-      currentURLs,
+      currentURLsData,
       appDirectory: '/path',
     }
     vi.mocked(renderSelectPrompt).mockResolvedValue('no')
@@ -247,7 +248,7 @@ describe('shouldOrPromptUpdateURLs', () => {
   test('saves the response for the next time', async () => {
     // Given
     const options = {
-      currentURLs,
+      currentURLsData,
       appDirectory: '/path',
     }
     vi.mocked(renderSelectPrompt).mockResolvedValue('always')
@@ -258,7 +259,7 @@ describe('shouldOrPromptUpdateURLs', () => {
     // Then
     expect(setAppInfo).toHaveBeenNthCalledWith(1, {
       directory: '/path',
-      updateURLs: true,
+      updateURLsData: true,
     })
   })
 })
@@ -419,11 +420,11 @@ describe('generateFrontendURL', () => {
   })
 })
 
-describe('generatePartnersURLs', () => {
+describe('generatePartnersURLsData', () => {
   test('Returns the default values without an override', () => {
     const applicationUrl = 'http://my-base-url'
 
-    const got = generatePartnersURLs(applicationUrl)
+    const got = generatePartnersURLsData(applicationUrl)
 
     expect(got).toMatchObject({
       applicationUrl,
@@ -439,7 +440,7 @@ describe('generatePartnersURLs', () => {
     const applicationUrl = 'http://my-base-url'
     const overrideCallbackPath = '/my/custom/path'
 
-    const got = generatePartnersURLs(applicationUrl, {
+    const got = generatePartnersURLsData(applicationUrl, {
       authCallbackPath: overrideCallbackPath,
     })
 
@@ -453,7 +454,7 @@ describe('generatePartnersURLs', () => {
     const applicationUrl = 'http://my-base-url'
     const overrideCallbackPaths = ['/my/custom/path1', '/my/custom/path2']
 
-    const got = generatePartnersURLs(applicationUrl, {
+    const got = generatePartnersURLsData(applicationUrl, {
       authCallbackPath: overrideCallbackPaths,
     })
 
@@ -473,7 +474,7 @@ describe('generatePartnersURLs', () => {
       subPathPrefix: 'apps',
     }
 
-    const got = generatePartnersURLs(applicationUrl, {
+    const got = generatePartnersURLsData(applicationUrl, {
       appProxy,
     })
 
@@ -491,7 +492,7 @@ describe('generatePartnersURLs', () => {
       subPath: 'proxy',
     }
 
-    const got = generatePartnersURLs(applicationUrl, {
+    const got = generatePartnersURLsData(applicationUrl, {
       appProxy,
     })
 
@@ -510,7 +511,7 @@ describe('generatePartnersURLs', () => {
       subPath: 'proxy',
     }
 
-    const got = generatePartnersURLs(applicationUrl, {
+    const got = generatePartnersURLsData(applicationUrl, {
       appProxy,
       authCallbackPath: overrideCallbackPaths,
     })
@@ -526,34 +527,34 @@ describe('generatePartnersURLs', () => {
   })
 })
 
-describe('validatePartnersURLs', () => {
+describe('validatePartnersURLsData', () => {
   test('does not throw any error when the URLs are valid', () => {
     // Given
     const applicationUrl = 'http://example.com'
     const redirectUrlWhitelist = ['http://example.com/callback1', 'http://example.com/callback2']
-    const urls: PartnersURLs = {applicationUrl, redirectUrlWhitelist}
+    const urls: PartnersURLsData = {applicationUrl, redirectUrlWhitelist}
 
     // When/Then
-    validatePartnersURLs(urls)
+    validatePartnersURLsData(urls)
   })
 
   test('it raises an error when the application URL is not valid', () => {
     // Given
     const applicationUrl = 'wrong'
     const redirectUrlWhitelist = ['http://example.com/callback1', 'http://example.com/callback2']
-    const urls: PartnersURLs = {applicationUrl, redirectUrlWhitelist}
+    const urls: PartnersURLsData = {applicationUrl, redirectUrlWhitelist}
 
     // When/Then
-    expect(() => validatePartnersURLs(urls)).toThrow(/Invalid application URL/)
+    expect(() => validatePartnersURLsData(urls)).toThrow(/Invalid application URL/)
   })
 
   test('it raises an error when the redirection URLs are not valid', () => {
     // Given
     const applicationUrl = 'http://example.com'
     const redirectUrlWhitelist = ['http://example.com/callback1', 'wrong']
-    const urls: PartnersURLs = {applicationUrl, redirectUrlWhitelist}
+    const urls: PartnersURLsData = {applicationUrl, redirectUrlWhitelist}
 
     // When/Then
-    expect(() => validatePartnersURLs(urls)).toThrow(/Invalid redirection URLs/)
+    expect(() => validatePartnersURLsData(urls)).toThrow(/Invalid redirection URLs/)
   })
 })

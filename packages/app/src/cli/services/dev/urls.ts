@@ -1,9 +1,9 @@
 import {setAppInfo} from '../local-storage.js'
 import {updateURLsPrompt} from '../../prompts/dev.js'
 import {AppInterface} from '../../models/app/app.js'
-import {UpdateAppQuery, UpdateAppQuerySchema, AppUpdateInput} from '../../api/graphql/update_app.js'
+import {UpdateAppQuery, UpdateAppQuerySchema, AppUpdateInput, AppUpdate} from '../../api/graphql/update_app.js'
 import {GetURLsQuery, GetURLsQuerySchema, GetURLsQueryVariables} from '../../api/graphql/get_urls.js'
-import {AppProxy} from '../../api/graphql/app.js'
+import {AppProxy, AppProxyUpdate} from '../../api/graphql/app.js'
 import {AbortError, BugError} from '@shopify/cli-kit/node/error'
 import {Config} from '@oclif/core'
 import {getAvailableTCPPort} from '@shopify/cli-kit/node/tcp'
@@ -16,15 +16,15 @@ import {terminalSupportsRawMode} from '@shopify/cli-kit/node/system'
 import {TunnelClient} from '@shopify/cli-kit/node/plugins/tunnel'
 import {outputDebug} from '@shopify/cli-kit/node/output'
 
-export interface PartnersURLs {
+export interface PartnersURLsData {
   appProxy?: AppProxy
   applicationUrl: string
   redirectUrlWhitelist: string[]
 }
 
-export interface PatnerURLOptions {
+export interface PatnerURLsOptions {
   authCallbackPath?: string | string[]
-  appProxy?: AppProxy
+  appProxy?: AppProxyUpdate
 }
 
 export interface FrontendURLOptions {
@@ -142,7 +142,7 @@ export function generateProxyURL(appProxy: AppProxy | undefined | null): string 
     : ''
 }
 
-export function generatePartnersURLs(baseURL: string, partnerURLOptions?: PatnerURLOptions): PartnersURLs {
+export function generatePartnersURLsData(baseURL: string, partnerURLOptions?: PatnerURLsOptions): PartnersURLsData {
   const authCallbackPath = partnerURLOptions?.authCallbackPath
 
   let redirectUrlWhitelist: string[]
@@ -167,6 +167,7 @@ export function generatePartnersURLs(baseURL: string, partnerURLOptions?: Patner
     redirectUrlWhitelist,
     ...(partnerURLOptions?.appProxy && {
       appProxy: {
+        subPathPrefix: 'apps',
         ...partnerURLOptions?.appProxy,
         url: partnerURLOptions?.appProxy.url ?? baseURL,
       },
@@ -174,8 +175,25 @@ export function generatePartnersURLs(baseURL: string, partnerURLOptions?: Patner
   }
 }
 
-export async function updateURLs(urls: PartnersURLs, apiKey: string, token: string): Promise<void> {
-  const variables: AppUpdateInput = {apiKey, ...urls}
+function transformAppUpdates(data: PartnersURLsData): AppUpdate {
+  const {appProxy, ...appUpdates} = data
+
+  return {
+    ...appUpdates,
+  }
+  // url: string
+  // subPathPrefix: string
+  // subPath?: string
+  // const {appProxy, ...appUpdates} = urls
+  // const appUpdates = transformAppUpdates(urls)
+  // proxyUrl?: string
+  // proxySubPath?: string
+}
+
+export async function updateURLsData(data: PartnersURLsData, apiKey: string, token: string): Promise<void> {
+  const appUpdates = transformAppUpdates(data)
+
+  const variables: AppUpdateInput = {apiKey, ...appUpdates}
   const query = UpdateAppQuery
   const result: UpdateAppQuerySchema = await partnersRequest(query, token, variables)
   if (result.appUpdate.userErrors.length > 0) {
@@ -184,7 +202,7 @@ export async function updateURLs(urls: PartnersURLs, apiKey: string, token: stri
   }
 }
 
-export async function getURLs(apiKey: string, token: string): Promise<PartnersURLs> {
+export async function getURLsData(apiKey: string, token: string): Promise<PartnersURLsData> {
   const variables: GetURLsQueryVariables = {apiKey}
   const query = GetURLsQuery
   const result: GetURLsQuerySchema = await partnersRequest(query, token, variables)
@@ -196,7 +214,7 @@ export async function getURLs(apiKey: string, token: string): Promise<PartnersUR
 }
 
 export interface ShouldOrPromptUpdateURLsOptions {
-  currentURLs: PartnersURLs
+  currentURLsData: PartnersURLsData
   appDirectory: string
   cachedUpdateURLs?: boolean
   newApp?: boolean
@@ -207,9 +225,9 @@ export async function shouldOrPromptUpdateURLs(options: ShouldOrPromptUpdateURLs
   let shouldUpdate: boolean = options.cachedUpdateURLs === true
   if (options.cachedUpdateURLs === undefined) {
     const response = await updateURLsPrompt(
-      options.currentURLs.applicationUrl,
-      options.currentURLs.redirectUrlWhitelist,
-      options.currentURLs.appProxy,
+      options.currentURLsData.applicationUrl,
+      options.currentURLsData.redirectUrlWhitelist,
+      options.currentURLsData.appProxy,
     )
     let newUpdateURLs: boolean | undefined
     /* eslint-disable no-fallthrough */
@@ -225,22 +243,25 @@ export async function shouldOrPromptUpdateURLs(options: ShouldOrPromptUpdateURLs
         shouldUpdate = false
     }
     /* eslint-enable no-fallthrough */
-    setAppInfo({directory: options.appDirectory, updateURLs: newUpdateURLs})
+    setAppInfo({directory: options.appDirectory, updateURLData: newUpdateURLs})
   }
   return shouldUpdate
 }
 
-export function validatePartnersURLs(urls: PartnersURLs): void {
-  if (!isValidURL(urls.applicationUrl))
-    throw new AbortError(`Invalid application URL: ${urls.applicationUrl}`, 'Valid format: "https://example.com"')
+export function validatePartnersURLsData(data: PartnersURLsData): void {
+  if (!isValidURL(data.applicationUrl))
+    throw new AbortError(`Invalid application URL: ${data.applicationUrl}`, 'Valid format: "https://example.com"')
 
-  urls.redirectUrlWhitelist.forEach((url) => {
+  data.redirectUrlWhitelist.forEach((url) => {
     if (!isValidURL(url))
       throw new AbortError(
-        `Invalid redirection URLs: ${urls.redirectUrlWhitelist}`,
+        `Invalid redirection URLs: ${data.redirectUrlWhitelist}`,
         'Valid format: "https://example.com/callback1,https://example.com/callback2"',
       )
   })
+
+  if (data.appProxy?.url && !isValidURL(data.appProxy.url))
+    throw new AbortError(`Invalid application proxy URL: ${data.appProxy.url}`, 'Valid format: "https://example.com"')
 }
 
 export async function startTunnelPlugin(config: Config, port: number, provider: string): Promise<TunnelClient> {

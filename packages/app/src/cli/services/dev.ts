@@ -1,5 +1,6 @@
 import {ensureDevContext} from './context.js'
 import {
+  conformAppUpdate,
   generateFrontendURL,
   generatePartnersURLsData,
   getURLsData,
@@ -169,7 +170,7 @@ async function dev(options: DevOptions) {
       cachedUpdateURLs: cachedUpdateURLsData,
       newApp: remoteApp.newApp,
     })
-    if (shouldUpdateURLsData) await updateURLsData(newURLsData, apiKey, token)
+    if (shouldUpdateURLsData) await updateURLsData(conformAppUpdate(newURLsData), apiKey, token)
     await outputUpdateURLsResult(shouldUpdateURLsData, newURLsData, remoteApp)
     previewUrl = buildAppURLForWeb(storeFqdn, exposedUrl)
   }

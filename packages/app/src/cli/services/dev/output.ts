@@ -1,4 +1,4 @@
-import {PartnersURLData} from './urls.js'
+import {PartnersURLsData} from './urls.js'
 import {AppInterface} from '../../models/app/app.js'
 import {FunctionExtension, ThemeExtension} from '../../models/app/extensions.js'
 import {OrganizationApp} from '../../models/organization.js'
@@ -8,7 +8,7 @@ import {outputContent, outputInfo, outputToken} from '@shopify/cli-kit/node/outp
 
 export async function outputUpdateURLsResult(
   updated: boolean,
-  data: PartnersURLData,
+  data: PartnersURLsData,
   app: Omit<OrganizationApp, 'apiSecretKeys' | 'apiKey'> & {apiSecret?: string},
 ) {
   const dashboardURL = await partnersURL(app.organizationId, app.id)

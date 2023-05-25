@@ -29,6 +29,8 @@ export interface AppUpdate {
   applicationUrl: string
   proxyUrl?: string
   proxySubPath?: string
+  // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
+  // proxySubPathPrefix?: string
   redirectUrlWhitelist: string[]
 }
 

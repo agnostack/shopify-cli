@@ -8,7 +8,7 @@ export interface CachedAppInfo {
   title?: string
   orgId?: string
   storeFqdn?: string
-  updateURLs?: boolean
+  updateURLsData?: boolean
   tunnelPlugin?: string
 }
 
@@ -62,7 +62,7 @@ export function setAppInfo(
       title: options.title ?? savedApp.title,
       storeFqdn: options.storeFqdn ?? savedApp.storeFqdn,
       orgId: options.orgId ?? savedApp.orgId,
-      updateURLs: options.updateURLs ?? savedApp.updateURLs,
+      updateURLsData: options.updateURLsData ?? savedApp.updateURLsData,
       tunnelPlugin: options.tunnelPlugin ?? savedApp.tunnelPlugin,
     })
   } else {

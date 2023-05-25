@@ -39,7 +39,7 @@ describe('info', () => {
       title: 'My App',
       appId: '123',
       storeFqdn: 'my-app.example.com',
-      updateURLs: true,
+      updateURLsData: true,
     }
     vi.mocked(getAppInfo).mockReturnValue(cachedAppInfo)
     const app = mockApp()

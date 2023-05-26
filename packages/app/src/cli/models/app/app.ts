@@ -35,6 +35,7 @@ export const WebConfigurationSchema = zod.object({
       // subPathPrefix: zod.string(),
       subPath: zod.string().optional(),
       url: zod.string().optional(),
+      urlPathSuffix: zod.string().optional(),
     })
     .optional(),
   commands: zod.object({

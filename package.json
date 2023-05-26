@@ -1,6 +1,9 @@
 {
   "private": true,
   "type": "module",
+  "keywords": [
+    "agnoStack"
+  ],
   "scripts": {
     "package": "bin/package.js",
     "update-bugsnag": "bin/update-bugsnag.js",
@@ -90,7 +93,7 @@
     "semi": false,
     "printWidth": 120
   },
-  "version": "0.0.0.alpha.1",
+  "version": "0.0.0",
   "resolutions": {
     "@types/react": "17.0.2",
     "vite": "4.3.6",

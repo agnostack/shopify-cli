@@ -161,3 +161,9 @@ index.mjs
 testing.d.ts
 testing.js
 testing.mjs
+
+# TEMP/remove!!!!
+!packages/app/dist
+!packages/app/dist/**/*.*
+!packages/cli/dist
+!packages/cli/dist/**/*.*

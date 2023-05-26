@@ -1,8 +1,11 @@
 import {AppUpdate, AppUpdateProxyURLs} from './update_app.js'
+import {combineURLParts} from '../../utilities/app/app-url.js'
 
 export interface AppProxyUpdate {
   url?: string
   subPath?: string
+  // NOTE: urlPathSuffix is NOTE part of AppUpdateInput mutation
+  urlPathSuffix?: string
   // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
   // subPathPrefix?: string
 }
@@ -23,18 +26,7 @@ export interface PartnerAppUpdateOptions {
 }
 
 export function conformProxyURL(appProxy: AppProxy | undefined | null): string {
-  return appProxy
-    ? [appProxy.url, appProxy.subPathPrefix, appProxy.subPath]
-        .reduce<string[]>((_proxyURLParts, _proxyUrlPart = '') => {
-          const proxyURLPart = _proxyUrlPart.replace(/^\/|\/$/g, '')
-          if (proxyURLPart) {
-            return [..._proxyURLParts, proxyURLPart]
-          }
-
-          return _proxyURLParts
-        }, [])
-        .join('/')
-    : ''
+  return appProxy ? combineURLParts([appProxy.url, appProxy.subPathPrefix, appProxy.subPath]) : ''
 }
 
 export function conformPartnersURLsData(baseURL: string, appUpdateOptions?: PartnerAppUpdateOptions): PartnersURLsData {
@@ -65,7 +57,7 @@ export function conformPartnersURLsData(baseURL: string, appUpdateOptions?: Part
         ...appUpdateOptions?.appProxy,
         // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix, but does default to 'apps' when updated
         // subPathPrefix: partnerURLOptions?.appProxy.subPathPrefix ?? 'apps',
-        url: appUpdateOptions?.appProxy.url ?? baseURL,
+        url: combineURLParts([appUpdateOptions?.appProxy.url ?? baseURL, appUpdateOptions?.appProxy.urlPathSuffix]),
       },
     }),
   }

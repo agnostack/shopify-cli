@@ -95,9 +95,6 @@ out
 .nuxt
 dist
 
-# TEMP/remove!!!!
-!packages/cli/dist
-
 # extension build output
 fixtures/app/extensions/*/build
 
@@ -164,3 +161,7 @@ index.mjs
 testing.d.ts
 testing.js
 testing.mjs
+
+# TEMP/remove!!!!
+!packages/cli/dist
+!packages/cli/dist/**/*.*

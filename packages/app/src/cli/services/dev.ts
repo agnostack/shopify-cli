@@ -1,9 +1,7 @@
 import {ensureDevContext} from './context.js'
 import {
-  conformAppUpdate,
-  generateFrontendURL,
-  generatePartnersURLsData,
   getURLsData,
+  generateFrontendURL,
   shouldOrPromptUpdateURLs,
   startTunnelPlugin,
   updateURLsData,
@@ -31,6 +29,7 @@ import {buildAppURLForWeb} from '../utilities/app/app-url.js'
 import {HostThemeManager} from '../utilities/host-theme-manager.js'
 
 import {ExtensionSpecification} from '../models/extensions/specification.js'
+import {conformAppUpdate, conformPartnersURLsData} from '../api/graphql/app.js'
 import {Config} from '@oclif/core'
 import {reportAnalyticsEvent} from '@shopify/cli-kit/node/analytics'
 import {execCLI2} from '@shopify/cli-kit/node/ruby'
@@ -142,27 +141,23 @@ async function dev(options: DevOptions) {
   const appProxySubPath =
     backendConfig?.configuration.appProxy?.subPath ?? frontendConfig?.configuration.appProxy?.subPath
   const appProxyUrl = backendConfig?.configuration.appProxy?.url ?? frontendConfig?.configuration.appProxy?.url
-  const appProxy = backendConfig?.configuration
-    ? {
-        ...(appProxyUrl && {
-          url: appProxyUrl,
-        }),
-        // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
-        // subPathPrefix: appProxySubPathPrefix,
-        ...(appProxySubPath && {
-          subPath: appProxySubPath,
-        }),
-      }
-    : undefined
+  const appProxy = {
+    ...(appProxyUrl && {
+      url: appProxyUrl,
+    }),
+    ...(appProxySubPath && {
+      subPath: appProxySubPath,
+    }),
+    // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
+    // subPathPrefix: appProxySubPathPrefix,
+  }
 
   let previewUrl
 
   if (initiateUpdateUrls) {
-    const newURLsData = generatePartnersURLsData(exposedUrl, {
+    const newURLsData = conformPartnersURLsData(exposedUrl, {
       authCallbackPath: backendConfig?.configuration.authCallbackPath ?? frontendConfig?.configuration.authCallbackPath,
-      ...(appProxy && {
-        appProxy,
-      }),
+      appProxy,
     })
     shouldUpdateURLsData = await shouldOrPromptUpdateURLs({
       currentURLsData,

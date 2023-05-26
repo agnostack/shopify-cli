@@ -3,7 +3,7 @@ import {updateURLsPrompt} from '../../prompts/dev.js'
 import {AppInterface} from '../../models/app/app.js'
 import {UpdateAppQuery, UpdateAppQuerySchema, AppUpdateInput, AppUpdate} from '../../api/graphql/update_app.js'
 import {GetURLsQuery, GetURLsQuerySchema, GetURLsQueryVariables} from '../../api/graphql/get_urls.js'
-import {AppProxy, AppProxyUpdate} from '../../api/graphql/app.js'
+import {PartnersURLsData} from '../../api/graphql/app.js'
 import {AbortError, BugError} from '@shopify/cli-kit/node/error'
 import {Config} from '@oclif/core'
 import {getAvailableTCPPort} from '@shopify/cli-kit/node/tcp'
@@ -15,17 +15,6 @@ import {fanoutHooks} from '@shopify/cli-kit/node/plugins'
 import {terminalSupportsRawMode} from '@shopify/cli-kit/node/system'
 import {TunnelClient} from '@shopify/cli-kit/node/plugins/tunnel'
 import {outputDebug} from '@shopify/cli-kit/node/output'
-
-export interface PartnersURLsData {
-  appProxy?: AppProxy
-  applicationUrl: string
-  redirectUrlWhitelist: string[]
-}
-
-export interface PatnerURLsOptions {
-  authCallbackPath?: string | string[]
-  appProxy?: AppProxyUpdate
-}
 
 export interface FrontendURLOptions {
   app: AppInterface
@@ -128,72 +117,8 @@ async function pollTunnelURL(tunnelClient: TunnelClient): Promise<string> {
   })
 }
 
-export function generateProxyURL(appProxy: AppProxy | undefined | null): string {
-  return appProxy
-    ? [appProxy.url, appProxy.subPathPrefix, appProxy.subPath]
-        .reduce<string[]>((_proxyUrlParts, proxyUrlPart) => {
-          if (proxyUrlPart) {
-            return [..._proxyUrlParts, proxyUrlPart]
-          }
-
-          return _proxyUrlParts
-        }, [])
-        .join('/')
-    : ''
-}
-
-export function generatePartnersURLsData(baseURL: string, partnerURLOptions?: PatnerURLsOptions): PartnersURLsData {
-  const authCallbackPath = partnerURLOptions?.authCallbackPath
-
-  let redirectUrlWhitelist: string[]
-  if (authCallbackPath && authCallbackPath.length > 0) {
-    const authCallbackPaths = Array.isArray(authCallbackPath) ? authCallbackPath : [authCallbackPath]
-    redirectUrlWhitelist = authCallbackPaths.reduce<string[]>((acc, path) => {
-      if (path && path.length > 0) {
-        acc.push(`${baseURL}${path}`)
-      }
-      return acc
-    }, [])
-  } else {
-    redirectUrlWhitelist = [
-      `${baseURL}/auth/callback`,
-      `${baseURL}/auth/shopify/callback`,
-      `${baseURL}/api/auth/callback`,
-    ]
-  }
-
-  return {
-    applicationUrl: baseURL,
-    redirectUrlWhitelist,
-    ...(partnerURLOptions?.appProxy && {
-      appProxy: {
-        // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix, but does default to 'apps' when updated
-        subPathPrefix: 'apps',
-        ...partnerURLOptions?.appProxy,
-        url: partnerURLOptions?.appProxy.url ?? baseURL,
-      },
-    }),
-  }
-}
-
-function generateAppUpdates(data: PartnersURLsData): AppUpdate {
-  const {appProxy, ...appUpdates} = data
-
-  const proxyUpdates = {
-    proxyUrl: appProxy?.url,
-    proxySubPath: appProxy?.subPath,
-    // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
-    // proxySubPathPrefix: appProxy?.subPathPrefix,
-  }
-
-  return {
-    ...appUpdates,
-    ...proxyUpdates,
-  }
-}
-
-export async function updateURLsData(data: PartnersURLsData, apiKey: string, token: string): Promise<void> {
-  const variables: AppUpdateInput = {apiKey, ...generateAppUpdates(data)}
+export async function updateURLsData(data: AppUpdate, apiKey: string, token: string): Promise<void> {
+  const variables: AppUpdateInput = {apiKey, ...data}
   const query = UpdateAppQuery
   const result: UpdateAppQuerySchema = await partnersRequest(query, token, variables)
   if (result.appUpdate.userErrors.length > 0) {
@@ -248,7 +173,7 @@ export async function shouldOrPromptUpdateURLs(options: ShouldOrPromptUpdateURLs
   return shouldUpdate
 }
 
-export function validatePartnersURLsData(data: PartnersURLsData): void {
+export function validatePartnerAppUpdate(data: AppUpdate): void {
   if (!isValidURL(data.applicationUrl))
     throw new AbortError(`Invalid application URL: ${data.applicationUrl}`, 'Valid format: "https://example.com"')
 
@@ -260,8 +185,8 @@ export function validatePartnersURLsData(data: PartnersURLsData): void {
       )
   })
 
-  if (data.appProxy?.url && !isValidURL(data.appProxy.url))
-    throw new AbortError(`Invalid application proxy URL: ${data.appProxy.url}`, 'Valid format: "https://example.com"')
+  if (data.proxyUrl && !isValidURL(data.proxyUrl))
+    throw new AbortError(`Invalid application Proxy URL: ${data.proxyUrl}`, 'Valid format: "https://example.com"')
 }
 
 export async function startTunnelPlugin(config: Config, port: number, provider: string): Promise<TunnelClient> {

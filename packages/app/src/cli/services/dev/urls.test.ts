@@ -3,15 +3,14 @@ import {
   getURLsData,
   shouldOrPromptUpdateURLs,
   generateFrontendURL,
-  generatePartnersURLsData,
-  validatePartnersURLsData,
-  PartnersURLsData,
+  validatePartnerAppUpdate,
   FrontendURLOptions,
 } from './urls.js'
 import {testApp} from '../../models/app/app.test-data.js'
-import {UpdateAppQuery} from '../../api/graphql/update_app.js'
+import {AppUpdate, UpdateAppQuery} from '../../api/graphql/update_app.js'
 import {GetURLsQuery} from '../../api/graphql/get_urls.js'
 import {setAppInfo} from '../local-storage.js'
+import {conformPartnersURLsData} from '../../api/graphql/app.js'
 import {beforeEach, describe, expect, vi, test} from 'vitest'
 import {Config} from '@oclif/core'
 import {AbortError} from '@shopify/cli-kit/node/error'
@@ -57,7 +56,7 @@ describe('updateURLsData', () => {
   test('sends a request to update the URLs', async () => {
     // Given
     vi.mocked(partnersRequest).mockResolvedValueOnce({appUpdate: {userErrors: []}})
-    const urls = {
+    const data = {
       applicationUrl: 'https://example.com',
       redirectUrlWhitelist: [
         'https://example.com/auth/callback',
@@ -67,23 +66,24 @@ describe('updateURLsData', () => {
     }
     const expectedVariables = {
       apiKey: 'apiKey',
-      ...urls,
+      ...data,
     }
 
     // When
-    await updateURLsData(urls, 'apiKey', 'token')
+    await updateURLsData(data, 'apiKey', 'token')
 
     // Then
     expect(partnersRequest).toHaveBeenCalledWith(UpdateAppQuery, 'token', expectedVariables)
   })
 
-  // TODO: add test on proxyPath as well??
   test('sends a request to update the URLs and Proxy URL', async () => {
     // Given
     vi.mocked(partnersRequest).mockResolvedValueOnce({appUpdate: {userErrors: []}})
-    const urls = {
+    const data = {
       applicationUrl: 'https://example.com',
-      proxyUrl: 'https://example.com',
+      appProxy: {
+        url: 'https://example.com',
+      },
       redirectUrlWhitelist: [
         'https://example.com/auth/callback',
         'https://example.com/auth/shopify/callback',
@@ -92,11 +92,38 @@ describe('updateURLsData', () => {
     }
     const expectedVariables = {
       apiKey: 'apiKey',
-      ...urls,
+      ...data,
     }
 
     // When
-    await updateURLsData(urls, 'apiKey', 'token')
+    await updateURLsData(data, 'apiKey', 'token')
+
+    // Then
+    expect(partnersRequest).toHaveBeenCalledWith(UpdateAppQuery, 'token', expectedVariables)
+  })
+
+  test('sends a request to update the URLs and Proxy URL and path', async () => {
+    // Given
+    vi.mocked(partnersRequest).mockResolvedValueOnce({appUpdate: {userErrors: []}})
+    const data = {
+      applicationUrl: 'https://example.com',
+      appProxy: {
+        url: 'https://example.com',
+        proxyPath: 'proxy',
+      },
+      redirectUrlWhitelist: [
+        'https://example.com/auth/callback',
+        'https://example.com/auth/shopify/callback',
+        'https://example.com/api/auth/callback',
+      ],
+    }
+    const expectedVariables = {
+      apiKey: 'apiKey',
+      ...data,
+    }
+
+    // When
+    await updateURLsData(data, 'apiKey', 'token')
 
     // Then
     expect(partnersRequest).toHaveBeenCalledWith(UpdateAppQuery, 'token', expectedVariables)
@@ -105,13 +132,13 @@ describe('updateURLsData', () => {
   test('throws an error if requests has a user error', async () => {
     // Given
     vi.mocked(partnersRequest).mockResolvedValueOnce({appUpdate: {userErrors: [{message: 'Boom!'}]}})
-    const urls = {
+    const data = {
       applicationUrl: 'https://example.com',
       redirectUrlWhitelist: [],
     }
 
     // When
-    const got = updateURLsData(urls, 'apiKey', 'token')
+    const got = updateURLsData(data, 'apiKey', 'token')
 
     // Then
     await expect(got).rejects.toThrow(new AbortError(`Boom!`))
@@ -420,11 +447,11 @@ describe('generateFrontendURL', () => {
   })
 })
 
-describe('generatePartnersURLsData', () => {
+describe('conformPartnersURLsData', () => {
   test('Returns the default values without an override', () => {
     const applicationUrl = 'http://my-base-url'
 
-    const got = generatePartnersURLsData(applicationUrl)
+    const got = conformPartnersURLsData(applicationUrl)
 
     expect(got).toMatchObject({
       applicationUrl,
@@ -440,7 +467,7 @@ describe('generatePartnersURLsData', () => {
     const applicationUrl = 'http://my-base-url'
     const overrideCallbackPath = '/my/custom/path'
 
-    const got = generatePartnersURLsData(applicationUrl, {
+    const got = conformPartnersURLsData(applicationUrl, {
       authCallbackPath: overrideCallbackPath,
     })
 
@@ -454,7 +481,7 @@ describe('generatePartnersURLsData', () => {
     const applicationUrl = 'http://my-base-url'
     const overrideCallbackPaths = ['/my/custom/path1', '/my/custom/path2']
 
-    const got = generatePartnersURLsData(applicationUrl, {
+    const got = conformPartnersURLsData(applicationUrl, {
       authCallbackPath: overrideCallbackPaths,
     })
 
@@ -474,7 +501,7 @@ describe('generatePartnersURLsData', () => {
       subPathPrefix: 'apps',
     }
 
-    const got = generatePartnersURLsData(applicationUrl, {
+    const got = conformPartnersURLsData(applicationUrl, {
       appProxy,
     })
 
@@ -492,7 +519,7 @@ describe('generatePartnersURLsData', () => {
       subPath: 'proxy',
     }
 
-    const got = generatePartnersURLsData(applicationUrl, {
+    const got = conformPartnersURLsData(applicationUrl, {
       appProxy,
     })
 
@@ -511,7 +538,7 @@ describe('generatePartnersURLsData', () => {
       subPath: 'proxy',
     }
 
-    const got = generatePartnersURLsData(applicationUrl, {
+    const got = conformPartnersURLsData(applicationUrl, {
       appProxy,
       authCallbackPath: overrideCallbackPaths,
     })
@@ -527,34 +554,47 @@ describe('generatePartnersURLsData', () => {
   })
 })
 
-describe('validatePartnersURLsData', () => {
-  test('does not throw any error when the URLs are valid', () => {
+describe('validatePartnerAppUpdate', () => {
+  test('does not throw any error when the App Updates are valid', () => {
     // Given
     const applicationUrl = 'http://example.com'
     const redirectUrlWhitelist = ['http://example.com/callback1', 'http://example.com/callback2']
-    const urls: PartnersURLsData = {applicationUrl, redirectUrlWhitelist}
+    const proxyUrl = 'http://example-proxy.com'
+    const proxySubPath = 'proxy'
+    const data: AppUpdate = {applicationUrl, redirectUrlWhitelist, proxyUrl, proxySubPath}
 
     // When/Then
-    validatePartnersURLsData(urls)
+    validatePartnerAppUpdate(data)
   })
 
   test('it raises an error when the application URL is not valid', () => {
     // Given
     const applicationUrl = 'wrong'
     const redirectUrlWhitelist = ['http://example.com/callback1', 'http://example.com/callback2']
-    const urls: PartnersURLsData = {applicationUrl, redirectUrlWhitelist}
+    const data: AppUpdate = {applicationUrl, redirectUrlWhitelist}
 
     // When/Then
-    expect(() => validatePartnersURLsData(urls)).toThrow(/Invalid application URL/)
+    expect(() => validatePartnerAppUpdate(data)).toThrow(/Invalid application URL/)
   })
 
   test('it raises an error when the redirection URLs are not valid', () => {
     // Given
     const applicationUrl = 'http://example.com'
     const redirectUrlWhitelist = ['http://example.com/callback1', 'wrong']
-    const urls: PartnersURLsData = {applicationUrl, redirectUrlWhitelist}
+    const data: AppUpdate = {applicationUrl, redirectUrlWhitelist}
 
     // When/Then
-    expect(() => validatePartnersURLsData(urls)).toThrow(/Invalid redirection URLs/)
+    expect(() => validatePartnerAppUpdate(data)).toThrow(/Invalid redirection URLs/)
+  })
+
+  test('it raises an error when the application proxy URL is not valid', () => {
+    // Given
+    const applicationUrl = 'http://example.com'
+    const redirectUrlWhitelist = ['http://example.com/callback1', 'http://example.com/callback2']
+    const proxyUrl = 'wrong'
+    const data: AppUpdate = {applicationUrl, redirectUrlWhitelist, proxyUrl}
+
+    // When/Then
+    expect(() => validatePartnerAppUpdate(data)).toThrow(/Invalid application Proxy URL/)
   })
 })

@@ -17,6 +17,15 @@ export const UpdateAppQuery = gql`
         redirectUrlWhitelist: $redirectUrlWhitelist
       }
     ) {
+      app {
+        applicationUrl
+        redirectUrlWhitelist
+        appProxy {
+          subPath
+          subPathPrefix
+          url
+        }
+      }
       userErrors {
         message
         field

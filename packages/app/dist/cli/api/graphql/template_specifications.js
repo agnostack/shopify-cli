@@ -1,7 +1,7 @@
 import { gql } from 'graphql-request';
 export const RemoteTemplateSpecificationsQuery = gql `
-  query RemoteTemplateSpecifications($version: String) {
-    templateSpecifications(version: $version) {
+  query RemoteTemplateSpecifications($version: String, $apiKey: String) {
+    templateSpecifications(version: $version, apiKey: $apiKey) {
       identifier
       name
       group

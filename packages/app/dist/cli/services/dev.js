@@ -49,7 +49,7 @@ async function dev(options) {
     }
     const frontendConfig = localApp.webs.find(({ configuration }) => configuration.type === WebType.Frontend);
     const backendConfig = localApp.webs.find(({ configuration }) => configuration.type === WebType.Backend);
-    const webhooksPath = backendConfig?.configuration?.webhooksPath || '/api/webhooks';
+    const webhooksPath = backendConfig?.configuration?.webhooksPath || frontendConfig?.configuration?.webhooksPath || '/api/webhooks';
     const sendUninstallWebhook = Boolean(webhooksPath) && remoteAppUpdated;
     const initiateUpdateUrls = (frontendConfig || backendConfig) && options.update;
     let shouldUpdateURLsData = false;
@@ -192,10 +192,12 @@ async function dev(options) {
         additionalProcesses.push({
             prefix: 'webhooks',
             action: async (stdout, stderr, signal) => {
+                // If we have a backend, use that port, otherwise use the frontend port
+                const deliveryPort = backendConfig ? backendPort : frontendPort;
                 await sendUninstallWebhookToAppServer({
                     stdout,
                     token,
-                    address: `http://localhost:${backendOptions.backendPort}${webhooksPath}`,
+                    address: `http://localhost:${deliveryPort}${webhooksPath}`,
                     sharedSecret: backendOptions.apiSecret,
                     storeFqdn,
                 });

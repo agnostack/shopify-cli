@@ -9,8 +9,8 @@ import taxCalculationUIExtension from '../../models/templates/ui-specifications/
 import UIExtension from '../../models/templates/ui-specifications/ui_extension.js';
 import webPixelUIExtension from '../../models/templates/ui-specifications/web_pixel_extension.js';
 import { partnersRequest } from '@shopify/cli-kit/node/api/partners';
-export async function fetchExtensionTemplates(token, availableSpecifications) {
-    const remoteTemplates = await partnersRequest(RemoteTemplateSpecificationsQuery, token);
+export async function fetchExtensionTemplates(token, apiKey, availableSpecifications) {
+    const remoteTemplates = await partnersRequest(RemoteTemplateSpecificationsQuery, token, { apiKey });
     const localTemplates = localExtensionTemplates(availableSpecifications);
     return remoteTemplates.templateSpecifications.concat(localTemplates);
 }

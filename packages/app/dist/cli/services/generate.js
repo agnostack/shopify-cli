@@ -20,7 +20,7 @@ async function generate(options) {
     const specifications = await fetchSpecifications({ token, apiKey, config: options.config });
     const app = await loadApp({ directory: options.directory, specifications });
     const availableSpecifications = specifications.map((spec) => spec.identifier);
-    const extensionTemplates = await fetchExtensionTemplates(token, availableSpecifications);
+    const extensionTemplates = await fetchExtensionTemplates(token, apiKey, availableSpecifications);
     const promptOptions = await buildPromptOptions(extensionTemplates, specifications, app, options);
     const promptAnswers = await generateExtensionPrompts(promptOptions);
     await saveAnalyticsMetadata(promptAnswers, options.type);

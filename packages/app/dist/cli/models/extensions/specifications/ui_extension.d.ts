@@ -1,6 +1,10 @@
 declare const spec: import("../specification.js").ExtensionSpecification<{
     type: string;
     name: string;
+    metafields: {
+        namespace: string;
+        key: string;
+    }[];
     extensionPoints: {
         target: string;
         module: string;
@@ -9,10 +13,6 @@ declare const spec: import("../specification.js").ExtensionSpecification<{
             namespace: string;
             key: string;
         }[] | undefined;
-    }[];
-    metafields: {
-        namespace: string;
-        key: string;
     }[];
     description?: string | undefined;
     apiVersion?: string | undefined;

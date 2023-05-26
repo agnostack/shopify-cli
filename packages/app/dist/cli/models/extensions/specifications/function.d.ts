@@ -3,6 +3,16 @@ export type FunctionConfigType = zod.infer<typeof FunctionExtensionSchema>;
 export declare const FunctionExtensionSchema: zod.ZodObject<{
     type: zod.ZodString;
     name: zod.ZodString;
+    metafields: zod.ZodDefault<zod.ZodOptional<zod.ZodArray<zod.ZodObject<{
+        namespace: zod.ZodString;
+        key: zod.ZodString;
+    }, "strip", zod.ZodTypeAny, {
+        namespace: string;
+        key: string;
+    }, {
+        namespace: string;
+        key: string;
+    }>, "many">>>;
     description: zod.ZodOptional<zod.ZodString>;
     extensionPoints: zod.ZodOptional<zod.ZodAny>;
     capabilities: zod.ZodOptional<zod.ZodObject<{
@@ -18,16 +28,6 @@ export declare const FunctionExtensionSchema: zod.ZodObject<{
         block_progress?: boolean | undefined;
         api_access?: boolean | undefined;
     }>>;
-    metafields: zod.ZodDefault<zod.ZodOptional<zod.ZodArray<zod.ZodObject<{
-        namespace: zod.ZodString;
-        key: zod.ZodString;
-    }, "strip", zod.ZodTypeAny, {
-        namespace: string;
-        key: string;
-    }, {
-        namespace: string;
-        key: string;
-    }>, "many">>>;
     categories: zod.ZodOptional<zod.ZodArray<zod.ZodString, "many">>;
     build: zod.ZodObject<{
         command: zod.ZodOptional<zod.ZodEffects<zod.ZodString, string | undefined, string>>;
@@ -90,16 +90,16 @@ export declare const FunctionExtensionSchema: zod.ZodObject<{
     }>>;
 }, "strip", zod.ZodTypeAny, {
     type: string;
-    build: {
-        command?: string | undefined;
-        path?: string | undefined;
-    };
     name: string;
-    apiVersion: string;
     metafields: {
         namespace: string;
         key: string;
     }[];
+    apiVersion: string;
+    build: {
+        command?: string | undefined;
+        path?: string | undefined;
+    };
     configurationUi: boolean;
     description?: string | undefined;
     extensionPoints?: any;
@@ -124,12 +124,16 @@ export declare const FunctionExtensionSchema: zod.ZodObject<{
     } | undefined;
 }, {
     type: string;
+    name: string;
+    apiVersion: string;
     build: {
         command?: string | undefined;
         path?: string | undefined;
     };
-    name: string;
-    apiVersion: string;
+    metafields?: {
+        namespace: string;
+        key: string;
+    }[] | undefined;
     description?: string | undefined;
     extensionPoints?: any;
     capabilities?: {
@@ -137,10 +141,6 @@ export declare const FunctionExtensionSchema: zod.ZodObject<{
         block_progress?: boolean | undefined;
         api_access?: boolean | undefined;
     } | undefined;
-    metafields?: {
-        namespace: string;
-        key: string;
-    }[] | undefined;
     categories?: string[] | undefined;
     configurationUi?: boolean | undefined;
     ui?: {
@@ -159,16 +159,16 @@ export declare const FunctionExtensionSchema: zod.ZodObject<{
 }>;
 declare const spec: import("../specification.js").ExtensionSpecification<{
     type: string;
-    build: {
-        command?: string | undefined;
-        path?: string | undefined;
-    };
     name: string;
-    apiVersion: string;
     metafields: {
         namespace: string;
         key: string;
     }[];
+    apiVersion: string;
+    build: {
+        command?: string | undefined;
+        path?: string | undefined;
+    };
     configurationUi: boolean;
     description?: string | undefined;
     extensionPoints?: any;

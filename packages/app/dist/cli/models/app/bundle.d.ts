@@ -110,7 +110,6 @@ export declare const BundleSchema: zod.ZodObject<{
         }[];
     }>;
 }, "strip", zod.ZodTypeAny, {
-    id: string;
     extensions: {
         function: {
             id: string;
@@ -125,8 +124,8 @@ export declare const BundleSchema: zod.ZodObject<{
             filePaths: string[];
         }[];
     };
+    id: string;
 }, {
-    id: string;
     extensions: {
         function: {
             id: string;
@@ -141,5 +140,6 @@ export declare const BundleSchema: zod.ZodObject<{
             filePaths: string[];
         }[];
     };
+    id: string;
 }>;
 export type Bundle = zod.infer<typeof BundleSchema>;

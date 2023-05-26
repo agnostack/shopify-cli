@@ -1,11 +1,12 @@
 export function conformProxyURL(appProxy) {
     return appProxy
         ? [appProxy.url, appProxy.subPathPrefix, appProxy.subPath]
-            .reduce((_proxyUrlParts, proxyUrlPart) => {
-            if (proxyUrlPart) {
-                return [..._proxyUrlParts, proxyUrlPart];
+            .reduce((_proxyURLParts, _proxyUrlPart = '') => {
+            const proxyURLPart = _proxyUrlPart.replace(/^\/|\/$/g, '');
+            if (proxyURLPart) {
+                return [..._proxyURLParts, proxyURLPart];
             }
-            return _proxyUrlParts;
+            return _proxyURLParts;
         }, [])
             .join('/')
         : '';

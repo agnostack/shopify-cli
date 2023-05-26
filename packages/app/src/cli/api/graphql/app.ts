@@ -25,12 +25,13 @@ export interface PartnerAppUpdateOptions {
 export function conformProxyURL(appProxy: AppProxy | undefined | null): string {
   return appProxy
     ? [appProxy.url, appProxy.subPathPrefix, appProxy.subPath]
-        .reduce<string[]>((_proxyUrlParts, proxyUrlPart) => {
-          if (proxyUrlPart) {
-            return [..._proxyUrlParts, proxyUrlPart]
+        .reduce<string[]>((_proxyURLParts, _proxyUrlPart = '') => {
+          const proxyURLPart = _proxyUrlPart.replace(/^\/|\/$/g, '')
+          if (proxyURLPart) {
+            return [..._proxyURLParts, proxyURLPart]
           }
 
-          return _proxyUrlParts
+          return _proxyURLParts
         }, [])
         .join('/')
     : ''

@@ -163,7 +163,5 @@ testing.js
 testing.mjs
 
 # TEMP/remove!!!!
-!packages/app/dist
-!packages/app/dist/**/*.*
-!packages/cli/dist
-!packages/cli/dist/**/*.*
+!packages/*/dist
+!packages/*/dist/**/*.*

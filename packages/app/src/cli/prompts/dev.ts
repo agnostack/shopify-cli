@@ -1,7 +1,6 @@
-import {generateProxyURL} from '../services/dev/urls.js'
 import {fetchOrgAndApps, OrganizationAppsResponse} from '../services/dev/fetch.js'
+import {conformProxyURL, AppProxy} from '../api/graphql/app.js'
 import {Organization, MinimalOrganizationApp, OrganizationStore} from '../models/organization.js'
-import {AppProxy} from '../api/graphql/app.js'
 import {
   renderAutocompletePrompt,
   renderConfirmationPrompt,
@@ -117,7 +116,7 @@ export function updateURLsPrompt(
       'Current app URL': [currentAppUrl],
       'Current redirect URLs': currentRedirectUrls,
       ...(currentAppProxy && {
-        'Current proxy URL': [generateProxyURL(currentAppProxy)],
+        'Current proxy URL': [conformProxyURL(currentAppProxy)],
       }),
     },
   })

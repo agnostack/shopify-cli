@@ -1,9 +1,6 @@
 {
   "private": true,
   "type": "module",
-  "keywords": [
-    "agnoStack"
-  ],
   "scripts": {
     "package": "bin/package.js",
     "update-bugsnag": "bin/update-bugsnag.js",

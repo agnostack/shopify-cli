@@ -5,6 +5,7 @@
     "package": "bin/package.js",
     "update-bugsnag": "bin/update-bugsnag.js",
     "graph": "nx graph",
+    "postinstall": "nx build cli",
     "shopify": "nx build cli && node packages/cli/bin/dev.js",
     "shopify:run": "node packages/cli/bin/dev.js",
     "create-app": "nx build create-app && node packages/create-app/bin/dev.js",

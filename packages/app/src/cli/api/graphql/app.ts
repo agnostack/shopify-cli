@@ -72,10 +72,7 @@ export function conformPartnersURLsData(baseURL: string, appUpdateOptions?: Part
 }
 
 export function conformAppUpdate(data: PartnersURLsData): AppUpdate {
-  console.log(`>>>> > conformAppUpdate > data:`, data)
   const {appProxy, ...appUpdates} = data
-  console.log(`>>> > conformAppUpdate > appUpdates:`, appUpdates)
-  console.log(`>>> > conformAppUpdate > appProxy:`, appProxy)
 
   const proxyUpdates: AppUpdateProxyURLs = {
     ...(appProxy?.url && {
@@ -89,7 +86,6 @@ export function conformAppUpdate(data: PartnersURLsData): AppUpdate {
     //   proxySubPathPrefix: appProxy.subPathPrefix,
     // }),
   }
-  console.log(`>>> > conformAppUpdate > proxyUpdates:`, proxyUpdates)
 
   return {
     ...appUpdates,

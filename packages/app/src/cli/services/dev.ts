@@ -142,9 +142,14 @@ async function dev(options: DevOptions) {
   const appProxySubPath =
     backendConfig?.configuration.appProxy?.subPath ?? frontendConfig?.configuration.appProxy?.subPath
   const appProxyUrl = backendConfig?.configuration.appProxy?.url ?? frontendConfig?.configuration.appProxy?.url
+  const appProxyUrlPathSuffix =
+    backendConfig?.configuration.appProxy?.urlPathSuffix ?? frontendConfig?.configuration.appProxy?.urlPathSuffix
   const appProxy = {
     ...(appProxyUrl && {
       url: appProxyUrl,
+    }),
+    ...(appProxyUrlPathSuffix && {
+      urlPathSuffix: appProxyUrlPathSuffix,
     }),
     ...(appProxySubPath && {
       subPath: appProxySubPath,
@@ -166,7 +171,10 @@ async function dev(options: DevOptions) {
       cachedUpdateURLs: cachedUpdateURLsData,
       newApp: remoteApp.newApp,
     })
-    if (shouldUpdateURLsData) await updateURLsData(conformAppUpdate(newURLsData), apiKey, token)
+    if (shouldUpdateURLsData) {
+      // TODO handle update from response for setAppInfo?
+      await updateURLsData(conformAppUpdate(newURLsData), apiKey, token)
+    }
     await outputUpdateURLsResult(shouldUpdateURLsData, newURLsData, remoteApp)
     previewUrl = buildAppURLForWeb(storeFqdn, exposedUrl)
   }

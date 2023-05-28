@@ -1,4 +1,5 @@
 import {gql} from 'graphql-request'
+import {PartnersURLsData} from './app.js'
 
 export const UpdateAppQuery = gql`
   mutation appUpdate(
@@ -54,7 +55,8 @@ export interface AppUpdateInput extends AppUpdate {
 
 export interface UpdateAppQuerySchema {
   appUpdate: {
-    userErrors: {
+    app: PartnersURLsData
+    userErrors?: {
       field: string[]
       message: string
     }[]

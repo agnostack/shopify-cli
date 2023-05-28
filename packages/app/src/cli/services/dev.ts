@@ -25,7 +25,7 @@ import {fetchProductVariant} from '../utilities/extensions/fetch-product-variant
 import {load} from '../models/app/loader.js'
 import {getAppIdentifiers} from '../models/app/identifiers.js'
 import {getAnalyticsTunnelType} from '../utilities/analytics.js'
-import {buildAppURLForWeb} from '../utilities/app/app-url.js'
+import {buildAppURLForWeb, combineURLParts} from '../utilities/app/app-url.js'
 import {HostThemeManager} from '../utilities/host-theme-manager.js'
 
 import {ExtensionSpecification} from '../models/extensions/specification.js'
@@ -161,7 +161,7 @@ async function dev(options: DevOptions) {
   let previewUrl
 
   if (initiateUpdateUrls) {
-    const newURLsData = conformPartnersURLsData(exposedUrl, {
+    let newURLsData = conformPartnersURLsData(exposedUrl, {
       authCallbackPath: backendConfig?.configuration.authCallbackPath ?? frontendConfig?.configuration.authCallbackPath,
       appProxy,
     })
@@ -173,7 +173,15 @@ async function dev(options: DevOptions) {
     })
     if (shouldUpdateURLsData) {
       // TODO handle update from response for setAppInfo?
-      await updateURLsData(conformAppUpdate(newURLsData), apiKey, token)
+      newURLsData = await updateURLsData(conformAppUpdate(newURLsData), apiKey, token)
+      // if (
+      //   (updatedURLsData?.applicationUrl !== newURLsData.applicationUrl ||
+      //     updatedURLsData?.redirectUrlWhitelist !== newURLsData.redirectUrlWhitelist ||
+      //     updatedURLsData?.appProxy?.subPath !== newURLsData.appProxy?.subPath ||
+      //     updatedURLsData?.appProxy?.subPathPrefix !== newURLsData?.appProxy?.subPathPrefix ||
+      //     updatedURLsData?.appProxy?.url !== newURLsData?.appProxy?.url)
+      // )updatedURLsData
+      console.log(`>>> > dev > newURLsData:`, newURLsData)
     }
     await outputUpdateURLsResult(shouldUpdateURLsData, newURLsData, remoteApp)
     previewUrl = buildAppURLForWeb(storeFqdn, exposedUrl)

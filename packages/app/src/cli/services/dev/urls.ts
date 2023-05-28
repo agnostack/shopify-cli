@@ -117,14 +117,15 @@ async function pollTunnelURL(tunnelClient: TunnelClient): Promise<string> {
   })
 }
 
-export async function updateURLsData(data: AppUpdate, apiKey: string, token: string): Promise<void> {
+export async function updateURLsData(data: AppUpdate, apiKey: string, token: string): Promise<PartnersURLsData> {
   const variables: AppUpdateInput = {apiKey, ...data}
   const query = UpdateAppQuery
-  const result: UpdateAppQuerySchema = await partnersRequest(query, token, variables)
-  if (result.appUpdate.userErrors.length > 0) {
-    const errors = result.appUpdate.userErrors.map((error) => error.message).join(', ')
+  const result = await partnersRequest<UpdateAppQuerySchema>(query, token, variables)
+  if (result.appUpdate?.userErrors?.length && result.appUpdate?.userErrors?.length > 0) {
+    const errors = result.appUpdate?.userErrors.map((error) => error.message).join(', ')
     throw new AbortError(errors)
   }
+  return result.appUpdate.app
 }
 
 export async function getURLsData(apiKey: string, token: string): Promise<PartnersURLsData> {

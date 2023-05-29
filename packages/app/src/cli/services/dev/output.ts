@@ -21,14 +21,27 @@ export async function outputUpdateURLsResult(
         'But once your app is live, updating its URL will disrupt user access.',
       ],
     })
-  } else if (!updated) {
+  } else {
     renderInfo({
+      headline: `To make updates manually, you can modify your app's URL anytime via the Partner Dashboard: ${dashboardURL.link.url}`,
       body: [
-        'To make URL updates manually, you can add the following URLs as redirects in your',
-        dashboardURL,
-        {char: ':'},
+        '\n',
+        `Current application URL: ${data.applicationUrl}`,
         '\n\n',
+        'Current redirect URLs',
+        {char: ':'},
         {list: {items: data.redirectUrlWhitelist}},
+        ...(data.appProxy
+          ? [
+              '\n',
+              `Current proxy URL: ${data.appProxy.url}`,
+              '\n',
+              ...(data.appProxy.subPath ? [`Current proxy Subpath: ${data.appProxy.subPath}`, '\n'] : []),
+              ...(data.appProxy.subPathPrefix
+                ? [`Current proxy Subpath Prefix: ${data.appProxy.subPathPrefix}`, '\n']
+                : []),
+            ]
+          : []),
       ],
     })
   }

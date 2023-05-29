@@ -161,7 +161,7 @@ async function dev(options: DevOptions) {
   let previewUrl
 
   if (initiateUpdateUrls) {
-    let newURLsData = conformPartnersURLsData(exposedUrl, {
+    let updatedURLsData = conformPartnersURLsData(exposedUrl, {
       authCallbackPath: backendConfig?.configuration.authCallbackPath ?? frontendConfig?.configuration.authCallbackPath,
       appProxy,
     })
@@ -173,17 +173,9 @@ async function dev(options: DevOptions) {
     })
     if (shouldUpdateURLsData) {
       // TODO handle update from response for setAppInfo?
-      newURLsData = await updateURLsData(conformAppUpdate(newURLsData), apiKey, token)
-      // if (
-      //   (updatedURLsData?.applicationUrl !== newURLsData.applicationUrl ||
-      //     updatedURLsData?.redirectUrlWhitelist !== newURLsData.redirectUrlWhitelist ||
-      //     updatedURLsData?.appProxy?.subPath !== newURLsData.appProxy?.subPath ||
-      //     updatedURLsData?.appProxy?.subPathPrefix !== newURLsData?.appProxy?.subPathPrefix ||
-      //     updatedURLsData?.appProxy?.url !== newURLsData?.appProxy?.url)
-      // )updatedURLsData
-      console.log(`>>> > dev > newURLsData:`, newURLsData)
+      updatedURLsData = await updateURLsData(conformAppUpdate(updatedURLsData), apiKey, token)
     }
-    await outputUpdateURLsResult(shouldUpdateURLsData, newURLsData, remoteApp)
+    await outputUpdateURLsResult(shouldUpdateURLsData, updatedURLsData, remoteApp)
     previewUrl = buildAppURLForWeb(storeFqdn, exposedUrl)
   }
 

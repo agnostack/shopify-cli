@@ -57,7 +57,10 @@ export function conformPartnersURLsData(baseURL: string, appUpdateOptions?: Part
         ...appUpdateOptions?.appProxy,
         // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix, but does default to 'apps' when updated
         // subPathPrefix: partnerURLOptions?.appProxy.subPathPrefix ?? 'apps',
-        url: combineURLParts([appUpdateOptions?.appProxy.url ?? baseURL, appUpdateOptions?.appProxy.urlPathSuffix]),
+        url: `${combineURLParts([
+          appUpdateOptions?.appProxy.url ?? baseURL,
+          appUpdateOptions?.appProxy.urlPathSuffix,
+        ])}/`,
       },
     }),
   }

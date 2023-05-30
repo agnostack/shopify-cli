@@ -26,15 +26,12 @@ export default async function updateURLData(options: UpdateURLOptions): Promise<
     redirectURLs: options.redirectURLs,
     appProxy: options.appProxy,
   })
-  console.log(`>>> > newURLsUpdate`, newURLsUpdate)
   await updateURLsData(newURLsUpdate, apiKey, token)
   printResult(newURLsUpdate)
 }
 
 async function getNewURLsUpdate(token: string, apiKey: string, options: UpdateURLOptions): Promise<AppUpdate> {
-  console.log(`>>> > getNewURLsUpdate > options:`, options)
   const currentURLsData: PartnersURLsData = await getURLsData(apiKey, token)
-  console.log(`>>> > getNewURLsUpdate > currentURLsData:`, currentURLsData)
   const updatedURLsData: PartnersURLsData = {
     applicationUrl: options.appURL || (await appUrlPrompt(currentURLsData?.applicationUrl)),
     redirectUrlWhitelist:
@@ -47,16 +44,13 @@ async function getNewURLsUpdate(token: string, apiKey: string, options: UpdateUR
     },
   }
 
-  console.log(`>>>> > getNewURLsUpdate > conformAppUpdate/updatedURLsData:`, {conformAppUpdate, updatedURLsData})
   const appUpdate: AppUpdate = conformAppUpdate(updatedURLsData)
-  console.log(`>>>> > getNewURLsUpdate > appUpdate:`, appUpdate)
 
   validatePartnerAppUpdate(appUpdate)
   return appUpdate
 }
 
 function printResult(data: PartnersURLsData): void {
-  console.log(`>>> > printResult > data:`, data)
   const customSections = [
     {title: 'App URL', body: {list: {items: [data.applicationUrl]}}},
     {title: 'Allowed redirection URL(s)', body: {list: {items: data.redirectUrlWhitelist}}},

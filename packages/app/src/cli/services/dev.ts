@@ -1,3 +1,4 @@
+import {getAppInfo} from './local-storage.js'
 import {ensureDevContext} from './context.js'
 import {
   getURLsData,
@@ -25,7 +26,7 @@ import {fetchProductVariant} from '../utilities/extensions/fetch-product-variant
 import {load} from '../models/app/loader.js'
 import {getAppIdentifiers} from '../models/app/identifiers.js'
 import {getAnalyticsTunnelType} from '../utilities/analytics.js'
-import {buildAppURLForWeb, combineURLParts} from '../utilities/app/app-url.js'
+import {buildAppURLForWeb} from '../utilities/app/app-url.js'
 import {HostThemeManager} from '../utilities/host-theme-manager.js'
 
 import {ExtensionSpecification} from '../models/extensions/specification.js'
@@ -76,6 +77,7 @@ interface DevWebOptions {
   backendPort: number
   apiKey: string
   apiSecret?: string
+  appTitle?: string
   hostname?: string
   scopes?: AppConfiguration['scopes']
 }
@@ -272,6 +274,7 @@ async function dev(options: DevOptions) {
       apiKey,
       scopes: localApp.configuration.scopes,
       apiSecret: (remoteApp.apiSecret as string) ?? '',
+      appTitle: getAppInfo(localApp.directory)?.title,
       hostname: frontendUrl,
       backendPort,
     }
@@ -370,7 +373,7 @@ function devFrontendProxyTarget(options: DevFrontendTargetOptions): ReverseHTTPP
           FRONTEND_PORT: `${port}`,
           APP_URL: options.hostname,
           APP_ENV: 'development',
-          // Note: These are Laravel varaibles for backwards compatibility with 2.0 templates.
+          // Note: These are Laravel variables for backwards compatibility with 2.0 templates.
           SERVER_PORT: `${port}`,
         },
         signal,
@@ -382,6 +385,7 @@ function devFrontendProxyTarget(options: DevFrontendTargetOptions): ReverseHTTPP
 async function getDevEnvironmentVariables(options: DevWebOptions) {
   return {
     ...process.env,
+    ...(options.appTitle && {APP_TITLE: options.appTitle}),
     SHOPIFY_API_KEY: options.apiKey,
     SHOPIFY_API_SECRET: options.apiSecret,
     HOST: options.hostname,

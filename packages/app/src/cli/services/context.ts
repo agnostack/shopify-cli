@@ -145,6 +145,7 @@ export async function ensureDevContext(options: DevContextOptions, token: string
   if (selectedApp && selectedStore) {
     setAppInfo({
       appId: selectedApp.apiKey,
+      // title: selectedApp.title,
       directory: options.directory,
       storeFqdn: selectedStore.shopDomain,
       orgId,

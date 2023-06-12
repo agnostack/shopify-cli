@@ -3,8 +3,8 @@ import {ExtensionDevOptions} from '../extension.js'
 import {bundleExtension} from '../../extensions/bundle.js'
 
 import {AppInterface} from '../../../models/app/app.js'
-import {UIExtension} from '../../../models/app/extensions.js'
 import {updateExtensionConfig, updateExtensionDraft} from '../update-extension.js'
+import {ExtensionInstance} from '../../../models/extensions/extension-instance.js'
 import {ExtensionSpecification} from '../../../models/extensions/specification.js'
 import {AbortController, AbortSignal} from '@shopify/cli-kit/node/abort'
 import {joinPath} from '@shopify/cli-kit/node/path'
@@ -36,7 +36,7 @@ export async function setupBundlerAndFileWatcher(options: FileWatcherOptions) {
     bundlers.push(
       bundleExtension({
         minify: false,
-        outputBundlePath: extension.outputBundlePath,
+        outputPath: extension.outputPath,
         environment: 'development',
         env: {
           ...(options.devOptions.app.dotenv?.variables ?? {}),
@@ -110,8 +110,8 @@ export async function setupBundlerAndFileWatcher(options: FileWatcherOptions) {
   }
 }
 
-interface SetupNonPrevieableExtensionBundlerOptions {
-  extension: UIExtension
+interface SetupDraftableExtensionBundlerOptions {
+  extension: ExtensionInstance
   app: AppInterface
   url: string
   token: string
@@ -122,7 +122,7 @@ interface SetupNonPrevieableExtensionBundlerOptions {
   signal: AbortSignal
 }
 
-export async function setupNonPreviewableExtensionBundler({
+export async function setupDraftableExtensionBundler({
   extension,
   app,
   url,
@@ -132,10 +132,10 @@ export async function setupNonPreviewableExtensionBundler({
   stderr,
   stdout,
   signal,
-}: SetupNonPrevieableExtensionBundlerOptions) {
+}: SetupDraftableExtensionBundlerOptions) {
   return bundleExtension({
     minify: false,
-    outputBundlePath: extension.outputBundlePath,
+    outputPath: extension.outputPath,
     environment: 'development',
     env: {
       ...(app.dotenv?.variables ?? {}),
@@ -164,7 +164,7 @@ export async function setupNonPreviewableExtensionBundler({
 }
 
 interface SetupConfigWatcherOptions {
-  extension: UIExtension
+  extension: ExtensionInstance
   token: string
   apiKey: string
   registrationId: string

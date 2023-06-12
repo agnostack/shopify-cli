@@ -120,15 +120,17 @@ const ConcurrentOutput: FunctionComponent<ConcurrentOutputProps> = ({
     )
   }
 
+  const {isAborted} = useAbortSignal(abortSignal)
+
+  const useShortcuts = isRawModeSupported && state === ConcurrentOutputState.Running && !isAborted
+
   useInput(
     (input, key) => {
       handleCtrlC(input, key)
 
       onInput!(input, key, () => treeKill('SIGINT'))
     },
-    // isRawModeSupported can be undefined even if the type doesn't say so
-    // Ink is checking that isActive is actually === false, not falsey
-    {isActive: typeof onInput !== 'undefined' && Boolean(isRawModeSupported)},
+    {isActive: typeof onInput !== 'undefined' && useShortcuts},
   )
 
   useAsyncAndUnmount(runProcesses, {
@@ -140,8 +142,6 @@ const ConcurrentOutput: FunctionComponent<ConcurrentOutputProps> = ({
     },
   })
 
-  const {isAborted} = useAbortSignal(abortSignal)
-
   return (
     <>
       <Static items={processOutput}>
@@ -149,14 +149,10 @@ const ConcurrentOutput: FunctionComponent<ConcurrentOutputProps> = ({
           return (
             <Box flexDirection="column" key={index}>
               {chunk.lines.map((line, index) => (
-                <Box key={index} flexDirection="row">
+                <Box key={index} flexDirection="row" gap={1}>
                   {showTimestamps ? (
-                    <Box>
-                      <Box marginRight={1}>
-                        <Text color={chunk.color}>
-                          {new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')}
-                        </Text>
-                      </Box>
+                    <Box gap={1}>
+                      <Text color={chunk.color}>{new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')}</Text>
 
                       <Text bold color={chunk.color}>
                         {figures.lineVertical}
@@ -164,7 +160,7 @@ const ConcurrentOutput: FunctionComponent<ConcurrentOutputProps> = ({
                     </Box>
                   ) : null}
 
-                  <Box width={prefixColumnSize} marginX={1}>
+                  <Box width={prefixColumnSize}>
                     <Text color={chunk.color}>{chunk.prefix}</Text>
                   </Box>
 
@@ -172,7 +168,7 @@ const ConcurrentOutput: FunctionComponent<ConcurrentOutputProps> = ({
                     {figures.lineVertical}
                   </Text>
 
-                  <Box flexGrow={1} paddingLeft={1}>
+                  <Box flexGrow={1}>
                     <Text color={chunk.color}>{line}</Text>
                   </Box>
                 </Box>
@@ -181,9 +177,9 @@ const ConcurrentOutput: FunctionComponent<ConcurrentOutputProps> = ({
           )
         }}
       </Static>
-      {state === ConcurrentOutputState.Running && !isAborted && footer ? (
+      {footer ? (
         <Box marginY={1} flexDirection="column" flexGrow={1}>
-          {isRawModeSupported ? (
+          {useShortcuts ? (
             <Box flexDirection="column">
               {footer.shortcuts.map((shortcut, index) => (
                 <Text key={index}>
@@ -193,7 +189,7 @@ const ConcurrentOutput: FunctionComponent<ConcurrentOutputProps> = ({
             </Box>
           ) : null}
           {footer.subTitle ? (
-            <Box marginTop={isRawModeSupported ? 1 : 0}>
+            <Box marginTop={useShortcuts ? 1 : 0}>
               <Text>{footer.subTitle}</Text>
             </Box>
           ) : null}

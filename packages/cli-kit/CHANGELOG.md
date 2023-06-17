@@ -1,5 +1,13 @@
 # @shopify/cli-kit
 
+## 3.47.0-pre.1
+
+### Patch Changes
+
+- 9bb98c029: Remove image proxying through local server to enable proper functioning of Liquid filters
+- 99fc03fbc: Fix an issue in `shopify theme dev` that was affecting asset loading on local servers, in some shops
+- e217b34eb: Add React deduplication plugin for ESBuild & extensions
+
 ## 3.47.0-pre.0
 
 ### Patch Changes

@@ -1,5 +1,22 @@
 # @shopify/theme
 
+## 3.47.0-pre.1
+
+### Minor Changes
+
+- 8420d71cc: Fix `shopify theme dev` command to show valid URLs when `--theme` flag is used with a theme name
+
+### Patch Changes
+
+- 22d30f4ad: Fix session refresh for theme dev without password
+- 9bb98c029: Remove image proxying through local server to enable proper functioning of Liquid filters
+- 99fc03fbc: Fix an issue in `shopify theme dev` that was affecting asset loading on local servers, in some shops
+- 76694a35f: Fix clean login on theme dev
+- Updated dependencies [9bb98c029]
+- Updated dependencies [99fc03fbc]
+- Updated dependencies [e217b34eb]
+  - @shopify/cli-kit@3.47.0-pre.1
+
 ## 3.47.0-pre.0
 
 ### Minor Changes

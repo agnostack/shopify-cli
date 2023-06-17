@@ -1,5 +1,19 @@
 # @shopify/app
 
+## 3.47.0-pre.1
+
+### Patch Changes
+
+- dad44212c: Skip .DS_Dtore files when the theme app extension bundle content is created
+- d88380d70: Allow theme app extensions to exclude files from deploying via `.shopifyignore` file
+- e217b34eb: Add React deduplication plugin for ESBuild & extensions
+- Updated dependencies [9bb98c029]
+- Updated dependencies [99fc03fbc]
+- Updated dependencies [e217b34eb]
+  - @shopify/cli-kit@3.47.0-pre.1
+  - @shopify/plugin-cloudflare@3.47.0-pre.1
+  - @shopify/plugin-ngrok@3.47.0-pre.1
+
 ## 3.47.0-pre.0
 
 ### Patch Changes

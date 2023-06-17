@@ -7,7 +7,7 @@ import {
   appProxyURLPrompt,
   appUrlPrompt,
 } from '../../prompts/update-url.js'
-import {AppUpdate} from '../../api/graphql/update_app.js'
+import {AppUpdate} from '../../api/graphql/update_urls.js'
 import {ensureAuthenticatedPartners} from '@shopify/cli-kit/node/session'
 import {renderSuccess} from '@shopify/cli-kit/node/ui'
 

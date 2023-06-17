@@ -1,7 +1,7 @@
 import {setAppInfo} from '../local-storage.js'
 import {updateURLsPrompt} from '../../prompts/dev.js'
 import {AppInterface} from '../../models/app/app.js'
-import {UpdateAppQuery, UpdateAppQuerySchema, AppUpdateInput, AppUpdate} from '../../api/graphql/update_app.js'
+import {UpdateAppQuery, UpdateAppQuerySchema, AppUpdateInput, AppUpdate} from '../../api/graphql/update_urls.js'
 import {GetURLsQuery, GetURLsQuerySchema, GetURLsQueryVariables} from '../../api/graphql/get_urls.js'
 import {PartnersURLsData} from '../../api/graphql/app.js'
 import {AbortError, BugError} from '@shopify/cli-kit/node/error'
@@ -186,8 +186,11 @@ export function validatePartnerAppUpdate(data: AppUpdate): void {
       )
   })
 
-  if (data.proxyUrl && !isValidURL(data.proxyUrl))
-    throw new AbortError(`Invalid application Proxy URL: ${data.proxyUrl}`, 'Valid format: "https://example.com"')
+  if (data.appProxy && !isValidURL(data.appProxy.proxyUrl))
+    throw new AbortError(
+      `Invalid application Proxy URL: ${data.appProxy.proxyUrl}`,
+      'Valid format: "https://example.com"',
+    )
 }
 
 export async function startTunnelPlugin(config: Config, port: number, provider: string): Promise<TunnelClient> {

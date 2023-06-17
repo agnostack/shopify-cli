@@ -35,14 +35,18 @@ export const UpdateAppQuery = gql`
   }
 `
 
+export interface AppProxyInput {
+  proxySubPathPrefix: string
+  proxySubPath: string
+  proxyUrl: string
+}
+
 export interface AppUpdateProxyURLs {
-  proxyUrl?: string
-  proxySubPath?: string
-  // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
-  // proxySubPathPrefix?: string
+  appProxy?: AppProxyInput
 }
 
 export interface AppUpdateURLs extends AppUpdateProxyURLs {
+  preferencesUrl?: string
   applicationUrl: string
   redirectUrlWhitelist: string[]
 }

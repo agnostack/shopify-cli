@@ -7,7 +7,7 @@ import {
   FrontendURLOptions,
 } from './urls.js'
 import {testApp} from '../../models/app/app.test-data.js'
-import {AppUpdate, UpdateAppQuery} from '../../api/graphql/update_app.js'
+import {AppUpdate, UpdateAppQuery} from '../../api/graphql/update_urls.js'
 import {GetURLsQuery} from '../../api/graphql/get_urls.js'
 import {setAppInfo} from '../local-storage.js'
 import {conformPartnersURLsData} from '../../api/graphql/app.js'

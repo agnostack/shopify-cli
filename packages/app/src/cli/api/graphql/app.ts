@@ -1,4 +1,4 @@
-import {AppUpdate, AppUpdateProxyURLs} from './update_app.js'
+import {AppUpdate, AppUpdateProxyURLs} from './update_urls.js'
 import {combineURLParts} from '../../utilities/app/app-url.js'
 
 export interface AppProxyUpdate {

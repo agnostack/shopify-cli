@@ -1,15 +1,15 @@
 import {AppInterface} from '../../models/app/app.js'
 import {OrganizationApp} from '../../models/organization.js'
 import {ExtensionInstance} from '../../models/extensions/extension-instance.js'
-import {PartnersURLsData} from '../../api/graphql/app.js'
+import {AppData} from '../../api/graphql/app.js'
 import {partnersFqdn} from '@shopify/cli-kit/node/context/fqdn'
 import {renderConcurrent, RenderConcurrentOptions, renderInfo} from '@shopify/cli-kit/node/ui'
 import {outputContent, outputInfo, outputToken} from '@shopify/cli-kit/node/output'
 import {openURL} from '@shopify/cli-kit/node/system'
 
-export async function outputUpdateURLsResult(
+export async function outputUpdateURLsData(
   updated: boolean,
-  data: PartnersURLsData,
+  data: AppData,
   app: Omit<OrganizationApp, 'apiSecretKeys' | 'apiKey'> & {apiSecret?: string},
 ) {
   const dashboardURL = await partnersURL(app.organizationId, app.id)
@@ -37,10 +37,10 @@ export async function outputUpdateURLsResult(
               '\n',
               `Current proxy URL: ${data.appProxy.url}`,
               '\n',
-              ...(data.appProxy.subPath ? [`Current proxy Subpath: ${data.appProxy.subPath}`, '\n'] : []),
               ...(data.appProxy.subPathPrefix
                 ? [`Current proxy Subpath Prefix: ${data.appProxy.subPathPrefix}`, '\n']
                 : []),
+              ...(data.appProxy.subPath ? [`Current proxy Subpath: ${data.appProxy.subPath}`, '\n'] : []),
             ]
           : []),
       ],

@@ -29,8 +29,8 @@ export default class UpdateURL extends Command {
     const {flags} = await this.parse(UpdateURL)
     const options: UpdateURLOptions = {
       apiKey: flags['api-key'],
-      appURL: flags['app-url'],
-      redirectURLs: flags['redirect-urls']?.split(','),
+      applicationUrl: flags['app-url'],
+      redirectUrlWhitelist: flags['redirect-urls']?.split(','),
     }
     await updateURLData(options)
   }

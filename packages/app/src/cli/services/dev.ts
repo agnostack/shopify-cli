@@ -9,7 +9,7 @@ import {
 } from './dev/urls.js'
 import {installAppDependencies} from './dependencies.js'
 import {devUIExtensions} from './dev/extension.js'
-import {outputExtensionsMessages, outputUpdateURLsResult, renderDev} from './dev/output.js'
+import {outputExtensionsMessages, outputUpdateURLsData, renderDev} from './dev/output.js'
 import {themeExtensionArgs} from './dev/theme-extension-args.js'
 import {fetchSpecifications} from './generate/fetch-extension-specifications.js'
 import {sendUninstallWebhookToAppServer} from './webhook/send-app-uninstalled-webhook.js'
@@ -25,12 +25,12 @@ import {fetchProductVariant} from '../utilities/extensions/fetch-product-variant
 import {load} from '../models/app/loader.js'
 import {getAppIdentifiers} from '../models/app/identifiers.js'
 import {getAnalyticsTunnelType} from '../utilities/analytics.js'
-import {buildAppURLForWeb} from '../utilities/app/app-url.js'
+import {buildAppURLForWeb, combineURLParts} from '../utilities/app/app-url.js'
 import {HostThemeManager} from '../utilities/host-theme-manager.js'
 
 import {ExtensionInstance} from '../models/extensions/extension-instance.js'
 import {ExtensionSpecification} from '../models/extensions/specification.js'
-import {conformAppUpdate, conformPartnersURLsData} from '../api/graphql/app.js'
+import {conformPartnersURLsUpdate} from '../api/graphql/app.js'
 import {Config} from '@oclif/core'
 import {reportAnalyticsEvent} from '@shopify/cli-kit/node/analytics'
 import {execCLI2} from '@shopify/cli-kit/node/ruby'
@@ -139,37 +139,10 @@ async function dev(options: DevOptions) {
   const proxyPort = usingLocalhost ? await getAvailableTCPPort() : frontendPort
   const proxyUrl = usingLocalhost ? `${frontendUrl}:${proxyPort}` : frontendUrl
 
-  // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
-  // const appProxySubPathPrefix =
-  //   backendConfig?.configuration.appProxy?.subPathPrefix ?? frontendConfig?.configuration.appProxy?.subPathPrefix
-  const appProxySubPath =
-    backendConfig?.configuration.appProxy?.subPath ?? frontendConfig?.configuration.appProxy?.subPath
-  const appProxyUrl = backendConfig?.configuration.appProxy?.url ?? frontendConfig?.configuration.appProxy?.url
-  const appProxyUrlPathSuffix =
-    backendConfig?.configuration.appProxy?.urlPathSuffix ?? frontendConfig?.configuration.appProxy?.urlPathSuffix
-  const appProxy = {
-    ...(appProxyUrl && {
-      url: appProxyUrl,
-    }),
-    ...(appProxyUrlPathSuffix && {
-      urlPathSuffix: appProxyUrlPathSuffix,
-    }),
-    ...(appProxySubPath && {
-      subPath: appProxySubPath,
-    }),
-    // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
-    // subPathPrefix: appProxySubPathPrefix,
-  }
-
   let previewUrl
   if (frontendConfig || backendConfig) {
     previewUrl = buildAppURLForWeb(storeFqdn, exposedUrl)
     if (options.update) {
-      let updatedURLsData = conformPartnersURLsData(exposedUrl, {
-        authCallbackPath:
-          backendConfig?.configuration.authCallbackPath ?? frontendConfig?.configuration.authCallbackPath,
-        appProxy,
-      })
       shouldUpdateURLsData = await shouldOrPromptUpdateURLs({
         currentURLsData,
         appDirectory: localApp.directory,
@@ -177,10 +150,30 @@ async function dev(options: DevOptions) {
         newApp: remoteApp.newApp,
       })
       if (shouldUpdateURLsData) {
+        const appProxySubPathPrefix =
+          backendConfig?.configuration.appProxy?.subPathPrefix ?? frontendConfig?.configuration.appProxy?.subPathPrefix
+        const appProxySubPath =
+          backendConfig?.configuration.appProxy?.subPath ?? frontendConfig?.configuration.appProxy?.subPath
+        const appProxyUrl =
+          backendConfig?.configuration.appProxy?.url ?? frontendConfig?.configuration.appProxy?.url ?? exposedUrl
+        const appProxyUrlPathSuffix =
+          backendConfig?.configuration.appProxy?.urlPathSuffix ?? frontendConfig?.configuration.appProxy?.urlPathSuffix
+
+        const partnersURLsUpdate = conformPartnersURLsUpdate(exposedUrl, {
+          authCallbackPath:
+            backendConfig?.configuration.authCallbackPath ?? frontendConfig?.configuration.authCallbackPath,
+          appProxy: {
+            proxyUrl: combineURLParts([appProxyUrl, appProxyUrlPathSuffix]),
+            ...(appProxySubPath && {proxySubPath: appProxySubPath}),
+            ...(appProxySubPathPrefix && {proxySubPathPrefix: appProxySubPathPrefix}),
+          },
+        })
         // TODO handle update from response for setAppInfo?
-        updatedURLsData = await updateURLsData(conformAppUpdate(updatedURLsData), apiKey, token)
+        const updatedURLsData = await updateURLsData(partnersURLsUpdate, apiKey, token)
+        await outputUpdateURLsData(shouldUpdateURLsData, updatedURLsData, remoteApp)
+      } else {
+        await outputUpdateURLsData(shouldUpdateURLsData, currentURLsData, remoteApp)
       }
-      await outputUpdateURLsResult(shouldUpdateURLsData, updatedURLsData, remoteApp)
     }
   }
 

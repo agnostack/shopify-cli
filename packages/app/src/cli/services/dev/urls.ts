@@ -1,10 +1,10 @@
 import {setAppInfo} from '../local-storage.js'
 import {updateURLsPrompt} from '../../prompts/dev.js'
 import {AppInterface} from '../../models/app/app.js'
-import {UpdateAppQuery, UpdateAppQuerySchema, AppUpdateInput, AppUpdate} from '../../api/graphql/update_urls.js'
+import {UpdateAppQuery, UpdateAppQuerySchema, AppUpdateInput} from '../../api/graphql/update_urls.js'
 import {GetURLsQuery, GetURLsQuerySchema, GetURLsQueryVariables} from '../../api/graphql/get_urls.js'
-import {PartnersURLsData} from '../../api/graphql/app.js'
 import {AbortError, BugError} from '@shopify/cli-kit/node/error'
+import {AppUpdate, AppData} from '../../api/graphql/app.js'
 import {Config} from '@oclif/core'
 import {getAvailableTCPPort} from '@shopify/cli-kit/node/tcp'
 import {isValidURL} from '@shopify/cli-kit/common/url'
@@ -117,7 +117,7 @@ async function pollTunnelURL(tunnelClient: TunnelClient): Promise<string> {
   })
 }
 
-export async function updateURLsData(data: AppUpdate, apiKey: string, token: string): Promise<PartnersURLsData> {
+export async function updateURLsData(data: AppUpdate, apiKey: string, token: string): Promise<AppData> {
   const variables: AppUpdateInput = {apiKey, ...data}
   const query = UpdateAppQuery
   const result = await partnersRequest<UpdateAppQuerySchema>(query, token, variables)
@@ -128,7 +128,7 @@ export async function updateURLsData(data: AppUpdate, apiKey: string, token: str
   return result.appUpdate.app
 }
 
-export async function getURLsData(apiKey: string, token: string): Promise<PartnersURLsData> {
+export async function getURLsData(apiKey: string, token: string): Promise<AppData> {
   const variables: GetURLsQueryVariables = {apiKey}
   const query = GetURLsQuery
   const result: GetURLsQuerySchema = await partnersRequest(query, token, variables)
@@ -140,7 +140,7 @@ export async function getURLsData(apiKey: string, token: string): Promise<Partne
 }
 
 export interface ShouldOrPromptUpdateURLsOptions {
-  currentURLsData: PartnersURLsData
+  currentURLsData: AppData
   appDirectory: string
   cachedUpdateURLs?: boolean
   newApp?: boolean
@@ -155,6 +155,7 @@ export async function shouldOrPromptUpdateURLs(options: ShouldOrPromptUpdateURLs
       options.currentURLsData.redirectUrlWhitelist,
       options.currentURLsData.appProxy,
     )
+
     let newUpdateURLsData: boolean | undefined
     /* eslint-disable no-fallthrough */
     switch (response) {

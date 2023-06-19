@@ -22,7 +22,7 @@ export async function allowedRedirectionURLsPrompt(defaultValue?: string): Promi
   return urls.split(',')
 }
 
-export async function appProxyURLPrompt(defaultValue?: string): Promise<string | undefined> {
+export async function appProxyURLPrompt(defaultValue?: string): Promise<string> {
   return renderTextPrompt({
     message: 'App Proxy URL',
     defaultValue,
@@ -39,8 +39,7 @@ export async function appProxySubPathPrompt(defaultValue?: string): Promise<stri
   })
 }
 
-// NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
-export async function appProxySubPathPrefixPrompt(defaultValue: string): Promise<string> {
+export async function appProxySubPathPrefixPrompt(defaultValue: string): Promise<string | undefined> {
   return renderTextPrompt({
     message: 'App Proxy Subpath Prefix',
     defaultValue,

@@ -1,5 +1,5 @@
+import {AppData, AppUpdate} from './app.js'
 import {gql} from 'graphql-request'
-import {PartnersURLsData} from './app.js'
 
 export const UpdateAppQuery = gql`
   mutation appUpdate(
@@ -35,31 +35,13 @@ export const UpdateAppQuery = gql`
   }
 `
 
-export interface AppProxyInput {
-  proxySubPathPrefix: string
-  proxySubPath: string
-  proxyUrl: string
-}
-
-export interface AppUpdateProxyURLs {
-  appProxy?: AppProxyInput
-}
-
-export interface AppUpdateURLs {
-  preferencesUrl?: string
-  applicationUrl: string
-  redirectUrlWhitelist: string[]
-}
-
-export interface AppUpdate extends AppUpdateURLs, AppUpdateProxyURLs {}
-
 export interface AppUpdateInput extends AppUpdate {
   apiKey: string
 }
 
 export interface UpdateAppQuerySchema {
   appUpdate: {
-    app: PartnersURLsData
+    app: AppData
     userErrors?: {
       field: string[]
       message: string

@@ -1,5 +1,5 @@
 import {fetchOrgAndApps, OrganizationAppsResponse} from '../services/dev/fetch.js'
-import {conformProxyURL, AppProxy} from '../api/graphql/app.js'
+import {AppProxy} from '../api/graphql/app.js'
 import {Organization, MinimalOrganizationApp, OrganizationStore} from '../models/organization.js'
 import {
   renderAutocompletePrompt,
@@ -8,6 +8,7 @@ import {
   renderTextPrompt,
 } from '@shopify/cli-kit/node/ui'
 import {outputCompleted} from '@shopify/cli-kit/node/output'
+import {combineURLParts} from '../utilities/app/app-url.js'
 
 export async function selectOrganizationPrompt(organizations: Organization[]): Promise<Organization> {
   if (organizations.length === 1) {
@@ -116,7 +117,9 @@ export function updateURLsPrompt(
       'Current app URL': [currentAppUrl],
       'Current redirect URLs': currentRedirectUrls,
       ...(currentAppProxy && {
-        'Current proxy URL': [conformProxyURL(currentAppProxy)],
+        'Current proxy URL': [
+          combineURLParts([currentAppProxy.url, currentAppProxy.subPathPrefix, currentAppProxy.subPath]),
+        ],
       }),
     },
   })

@@ -30,8 +30,7 @@ export const WebConfigurationSchema = zod.object({
   port: zod.number().max(65536).min(0).optional(),
   appProxy: zod
     .object({
-      // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
-      // subPathPrefix: zod.string(),
+      subPathPrefix: zod.string(),
       subPath: zod.string().optional(),
       url: zod.string().optional(),
       urlPathSuffix: zod.string().optional(),

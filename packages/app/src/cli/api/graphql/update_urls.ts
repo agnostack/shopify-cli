@@ -5,17 +5,17 @@ export const UpdateAppQuery = gql`
   mutation appUpdate(
     $apiKey: String!
     $applicationUrl: Url!
-    $proxyUrl: Url
-    $proxySubPath: String
     $redirectUrlWhitelist: [Url]!
+    $preferencesUrl: Url
+    $appProxy: AppProxyInput
   ) {
     appUpdate(
       input: {
         apiKey: $apiKey
         applicationUrl: $applicationUrl
-        proxyUrl: $proxyUrl
-        proxySubPath: $proxySubPath
+        preferencesUrl: $preferencesUrl
         redirectUrlWhitelist: $redirectUrlWhitelist
+        appProxy: $appProxy
       }
     ) {
       app {
@@ -45,7 +45,7 @@ export interface AppUpdateProxyURLs {
   appProxy?: AppProxyInput
 }
 
-export interface AppUpdateURLs extends AppUpdateProxyURLs {
+export interface AppUpdateURLs {
   preferencesUrl?: string
   applicationUrl: string
   redirectUrlWhitelist: string[]

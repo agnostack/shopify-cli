@@ -168,7 +168,7 @@ async function dev(options: DevOptions) {
             ...(appProxySubPathPrefix && {proxySubPathPrefix: appProxySubPathPrefix}),
           },
         })
-        // TODO handle update from response for setAppInfo?
+        // Should this handle calling setAppInfo w/ update from response?
         const updatedURLsData = await updateURLsData(partnersURLsUpdate, apiKey, token)
         await outputUpdateURLsData(shouldUpdateURLsData, updatedURLsData, remoteApp)
       } else {

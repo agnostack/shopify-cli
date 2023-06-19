@@ -7,11 +7,10 @@ import {
   FrontendURLOptions,
 } from './urls.js'
 import {testApp} from '../../models/app/app.test-data.js'
-import {AppUpdate} from '../../api/graphql/app.js'
+import {conformPartnersURLsUpdate, AppUpdate} from '../../api/graphql/app.js'
 import {UpdateAppQuery} from '../../api/graphql/update_urls.js'
 import {GetURLsQuery} from '../../api/graphql/get_urls.js'
 import {setAppInfo} from '../local-storage.js'
-import {conformPartnersURLsUpdate} from '../../api/graphql/app.js'
 import {beforeEach, describe, expect, vi, test} from 'vitest'
 import {Config} from '@oclif/core'
 import {AbortError} from '@shopify/cli-kit/node/error'

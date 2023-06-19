@@ -1,4 +1,5 @@
 import {selectApp} from './select-app.js'
+import {combineURLParts} from '../../utilities/app/app-url.js'
 import {getURLsData, updateURLsData, validatePartnerAppUpdate} from '../dev/urls.js'
 import {AppUpdate, AppData, AppProxyInput} from '../../api/graphql/app.js'
 import {
@@ -10,7 +11,6 @@ import {
 } from '../../prompts/update-url.js'
 import {ensureAuthenticatedPartners} from '@shopify/cli-kit/node/session'
 import {renderSuccess} from '@shopify/cli-kit/node/ui'
-import {combineURLParts} from '../../utilities/app/app-url.js'
 
 export interface UpdateURLOptions {
   apiKey?: string

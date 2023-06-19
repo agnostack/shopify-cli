@@ -1,3 +1,4 @@
+import {combineURLParts} from '../utilities/app/app-url.js'
 import {fetchOrgAndApps, OrganizationAppsResponse} from '../services/dev/fetch.js'
 import {AppProxy} from '../api/graphql/app.js'
 import {Organization, MinimalOrganizationApp, OrganizationStore} from '../models/organization.js'
@@ -8,7 +9,6 @@ import {
   renderTextPrompt,
 } from '@shopify/cli-kit/node/ui'
 import {outputCompleted} from '@shopify/cli-kit/node/output'
-import {combineURLParts} from '../utilities/app/app-url.js'
 
 export async function selectOrganizationPrompt(organizations: Organization[]): Promise<Organization> {
   if (organizations.length === 1) {

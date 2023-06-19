@@ -1,5 +1,3 @@
-import {combineURLParts} from '../../utilities/app/app-url.js'
-
 export interface AppProxy {
   subPathPrefix?: string
   subPath?: string

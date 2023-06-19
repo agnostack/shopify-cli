@@ -1,21 +1,21 @@
+import {AppData, AppUpdate} from './app.js'
 import {gql} from 'graphql-request'
-import {PartnersURLsData} from './app.js'
 
 export const UpdateAppQuery = gql`
   mutation appUpdate(
     $apiKey: String!
     $applicationUrl: Url!
-    $proxyUrl: Url
-    $proxySubPath: String
     $redirectUrlWhitelist: [Url]!
+    $preferencesUrl: Url
+    $appProxy: AppProxyInput
   ) {
     appUpdate(
       input: {
         apiKey: $apiKey
         applicationUrl: $applicationUrl
-        proxyUrl: $proxyUrl
-        proxySubPath: $proxySubPath
+        preferencesUrl: $preferencesUrl
         redirectUrlWhitelist: $redirectUrlWhitelist
+        appProxy: $appProxy
       }
     ) {
       app {
@@ -35,27 +35,13 @@ export const UpdateAppQuery = gql`
   }
 `
 
-export interface AppUpdateProxyURLs {
-  proxyUrl?: string
-  proxySubPath?: string
-  // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
-  // proxySubPathPrefix?: string
-}
-
-export interface AppUpdateURLs extends AppUpdateProxyURLs {
-  applicationUrl: string
-  redirectUrlWhitelist: string[]
-}
-
-export interface AppUpdate extends AppUpdateURLs, AppUpdateProxyURLs {}
-
 export interface AppUpdateInput extends AppUpdate {
   apiKey: string
 }
 
 export interface UpdateAppQuerySchema {
   appUpdate: {
-    app: PartnersURLsData
+    app: AppData
     userErrors?: {
       field: string[]
       message: string

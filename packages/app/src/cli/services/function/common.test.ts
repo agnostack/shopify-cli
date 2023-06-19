@@ -2,7 +2,7 @@ import {inFunctionContext} from './common.js'
 import {load as loadApp} from '../../models/app/loader.js'
 import {testApp, testFunctionExtension} from '../../models/app/app.test-data.js'
 import {AppInterface} from '../../models/app/app.js'
-import {ExtensionInstance} from '../../models/extensions/specification.js'
+import {ExtensionInstance} from '../../models/extensions/extension-instance.js'
 import {describe, vi, expect, beforeEach, test} from 'vitest'
 import {Config} from '@oclif/core'
 import {renderFatalError} from '@shopify/cli-kit/node/ui'
@@ -45,12 +45,12 @@ describe('ensure we are within a function context', () => {
     let ranCallback = false
 
     // When
-    await inFunctionContext(new Config({root: ''}), 'random/dir', async (_app, _fun) => {
-      ranCallback = true
-    })
+    await expect(
+      inFunctionContext(new Config({root: ''}), 'random/dir', async (_app, _fun) => {
+        ranCallback = true
+      }),
+    ).rejects.toThrowError()
 
-    // Then
     expect(ranCallback).toBe(false)
-    expect(renderFatalError).toHaveBeenCalledOnce()
   })
 })

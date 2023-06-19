@@ -1,35 +1,39 @@
-import {AppUpdate, AppUpdateProxyURLs} from './update_app.js'
-import {combineURLParts} from '../../utilities/app/app-url.js'
-
-export interface AppProxyUpdate {
-  url?: string
-  subPath?: string
-  // NOTE: urlPathSuffix is NOTE part of AppUpdateInput mutation
-  urlPathSuffix?: string
-  // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
-  // subPathPrefix?: string
-}
-
-export interface AppProxy extends AppProxyUpdate {
+export interface AppProxy {
   subPathPrefix?: string
+  subPath?: string
+  url: string
 }
 
-export interface PartnersURLsData {
+export interface AppProxyInput {
+  proxySubPathPrefix?: string
+  proxySubPath?: string
+  proxyUrl: string
+}
+
+interface AppUpdateProxyURLsInput {
+  appProxy?: AppProxyInput
+}
+
+interface AppUpdateProxyURLs {
   appProxy?: AppProxy
+}
+
+interface AppUpdateURLs {
+  preferencesUrl?: string
   applicationUrl: string
   redirectUrlWhitelist: string[]
 }
 
+export interface AppUpdate extends AppUpdateURLs, AppUpdateProxyURLsInput {}
+
+export interface AppData extends AppUpdateURLs, AppUpdateProxyURLs {}
+
 export interface PartnerAppUpdateOptions {
   authCallbackPath?: string | string[]
-  appProxy?: AppProxyUpdate
+  appProxy?: AppProxyInput
 }
 
-export function conformProxyURL(appProxy: AppProxy | undefined | null): string {
-  return appProxy ? combineURLParts([appProxy.url, appProxy.subPathPrefix, appProxy.subPath]) : ''
-}
-
-export function conformPartnersURLsData(baseURL: string, appUpdateOptions?: PartnerAppUpdateOptions): PartnersURLsData {
+export function conformPartnersURLsUpdate(baseURL: string, appUpdateOptions?: PartnerAppUpdateOptions): AppUpdate {
   const authCallbackPath = appUpdateOptions?.authCallbackPath
 
   let redirectUrlWhitelist: string[]
@@ -54,36 +58,10 @@ export function conformPartnersURLsData(baseURL: string, appUpdateOptions?: Part
     redirectUrlWhitelist,
     ...(appUpdateOptions?.appProxy && {
       appProxy: {
-        ...appUpdateOptions?.appProxy,
-        // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix, but does default to 'apps' when updated
-        // subPathPrefix: partnerURLOptions?.appProxy.subPathPrefix ?? 'apps',
-        url: `${combineURLParts([
-          appUpdateOptions?.appProxy.url ?? baseURL,
-          appUpdateOptions?.appProxy.urlPathSuffix,
-        ])}/`,
+        ...appUpdateOptions.appProxy,
+        // NOTE: AppUpdateInput mutation currently default to 'apps' when updated (confirm if still true?)
+        proxySubPathPrefix: appUpdateOptions?.appProxy.proxySubPathPrefix ?? 'apps',
       },
     }),
-  }
-}
-
-export function conformAppUpdate(data: PartnersURLsData): AppUpdate {
-  const {appProxy, ...appUpdates} = data
-
-  const proxyUpdates: AppUpdateProxyURLs = {
-    ...(appProxy?.url && {
-      proxyUrl: appProxy.url,
-    }),
-    ...(appProxy?.subPath && {
-      proxySubPath: appProxy.subPath,
-    }),
-    // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
-    // ...(appProxy?.subPathPrefix && {
-    //   proxySubPathPrefix: appProxy.subPathPrefix,
-    // }),
-  }
-
-  return {
-    ...appUpdates,
-    ...proxyUpdates,
   }
 }

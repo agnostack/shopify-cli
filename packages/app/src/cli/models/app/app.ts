@@ -1,6 +1,5 @@
-import {Extension, FunctionExtension, ThemeExtension, UIExtension} from './extensions.js'
 import {AppErrors} from './loader.js'
-import {ExtensionInstance} from '../extensions/specification.js'
+import {ExtensionInstance} from '../extensions/extension-instance.js'
 import {zod} from '@shopify/cli-kit/node/schema'
 import {DotEnvFile} from '@shopify/cli-kit/node/dot-env'
 import {getDependencies, PackageManager, readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager'
@@ -31,8 +30,7 @@ export const WebConfigurationSchema = zod.object({
   port: zod.number().max(65536).min(0).optional(),
   appProxy: zod
     .object({
-      // NOTE: AppUpdateInput mutation currently does not support setting subPathPrefix
-      // subPathPrefix: zod.string(),
+      subPathPrefix: zod.string(),
       subPath: zod.string().optional(),
       url: zod.string().optional(),
       urlPathSuffix: zod.string().optional(),
@@ -66,16 +64,10 @@ export interface AppInterface {
   usesWorkspaces: boolean
   dotenv?: DotEnvFile
   allExtensions: ExtensionInstance[]
-  extensions: {
-    ui: UIExtension[]
-    theme: ThemeExtension[]
-    function: FunctionExtension[]
-  }
   errors?: AppErrors
   hasExtensions: () => boolean
-  hasUIExtensions: () => boolean
   updateDependencies: () => Promise<void>
-  extensionsForType: (spec: {identifier: string; externalIdentifier: string}) => Extension[]
+  extensionsForType: (spec: {identifier: string; externalIdentifier: string}) => ExtensionInstance[]
 }
 
 export class App implements AppInterface {
@@ -91,11 +83,6 @@ export class App implements AppInterface {
   dotenv?: DotEnvFile
   errors?: AppErrors
   allExtensions: ExtensionInstance[]
-  extensions: {
-    ui: UIExtension[]
-    theme: ThemeExtension[]
-    function: FunctionExtension[]
-  }
 
   // eslint-disable-next-line max-params
   constructor(
@@ -112,12 +99,6 @@ export class App implements AppInterface {
     dotenv?: DotEnvFile,
     errors?: AppErrors,
   ) {
-    // Temporary workaround while we migrate to use appModule features.
-    const functionsExt = extensions.filter((extension) => extension.features.includes('function'))
-    const themes = extensions.filter((extension) => extension.features.includes('theme'))
-    const uis = extensions.filter(
-      (extension) => !extension.features.includes('function') && !extension.features.includes('theme'),
-    )
     this.name = name
     this.idEnvironmentVariableName = idEnvironmentVariableName
     this.directory = directory
@@ -128,11 +109,6 @@ export class App implements AppInterface {
     this.webs = webs
     this.dotenv = dotenv
     this.allExtensions = extensions
-    this.extensions = {
-      ui: uis,
-      theme: themes,
-      function: functionsExt as unknown as FunctionExtension[],
-    }
     this.errors = errors
     this.usesWorkspaces = usesWorkspaces
   }
@@ -146,11 +122,7 @@ export class App implements AppInterface {
     return this.allExtensions.length > 0
   }
 
-  hasUIExtensions(): boolean {
-    return this.extensions.ui.length > 0
-  }
-
-  extensionsForType(specification: {identifier: string; externalIdentifier: string}): Extension[] {
+  extensionsForType(specification: {identifier: string; externalIdentifier: string}): ExtensionInstance[] {
     return this.allExtensions.filter(
       (extension) => extension.type === specification.identifier || extension.type === specification.externalIdentifier,
     )
@@ -167,7 +139,7 @@ type RendererVersionResult = {name: string; version: string} | undefined | 'not_
  * @returns The version if the dependency exists.
  */
 export async function getUIExtensionRendererVersion(
-  extension: UIExtension,
+  extension: ExtensionInstance,
   app: AppInterface,
 ): Promise<RendererVersionResult> {
   // Look for the vanilla JS version of the dependency (the react one depends on it, will always be present)

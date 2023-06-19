@@ -1,8 +1,9 @@
 import {AppConfigurationSchema, Web, WebConfigurationSchema, App, AppInterface, WebType} from './app.js'
 import {configurationFileNames, dotEnvFileNames} from '../../constants.js'
 import metadata from '../../metadata.js'
-import {ExtensionInstance, ExtensionSpecification} from '../extensions/specification.js'
+import {ExtensionInstance} from '../extensions/extension-instance.js'
 import {TypeSchema} from '../extensions/schemas.js'
+import {ExtensionSpecification} from '../extensions/specification.js'
 import {zod} from '@shopify/cli-kit/node/schema'
 import {fileExists, readFile, glob, findPathUp} from '@shopify/cli-kit/node/fs'
 import {readAndParseDotEnv, DotEnvFile} from '@shopify/cli-kit/node/dot-env'
@@ -293,7 +294,11 @@ class AppLoader {
 
     const extensions = configPaths.map(async (configurationPath) => {
       const directory = dirname(configurationPath)
-      const specification = await findSpecificationForConfig(this.specifications, configurationPath, this.abortOrReport)
+      const specification = await findSpecificationForConfig(
+        this.specifications,
+        configurationPath,
+        this.abortOrReport.bind(this),
+      )
 
       if (!specification) return
 
@@ -406,9 +411,9 @@ async function logMetadataForLoadedApp(
   await metadata.addPublicMetadata(async () => {
     const projectType = await getProjectType(app.webs)
 
-    const extensionFunctionCount = app.extensions.function.length
-    const extensionUICount = app.extensions.ui.length
-    const extensionThemeCount = app.extensions.theme.length
+    const extensionFunctionCount = app.allExtensions.filter((extension) => extension.isFunctionExtension).length
+    const extensionUICount = app.allExtensions.filter((extension) => extension.isESBuildExtension).length
+    const extensionThemeCount = app.allExtensions.filter((extension) => extension.isThemeExtension).length
 
     const extensionTotalCount = app.allExtensions.length
 

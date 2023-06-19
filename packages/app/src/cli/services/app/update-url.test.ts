@@ -29,8 +29,8 @@ describe('update-url', () => {
     // Given
     const options: UpdateURLOptions = {
       apiKey: 'api-key-from-flag',
-      appURL: 'https://example.com',
-      redirectURLs: ['https://example.com/callback'],
+      applicationUrl: 'https://example.com',
+      redirectUrlWhitelist: ['https://example.com/callback'],
     }
 
     // When
@@ -51,8 +51,8 @@ describe('update-url', () => {
     // Given
     vi.mocked(selectApp).mockResolvedValue(APP1)
     const options: UpdateURLOptions = {
-      appURL: 'https://example.com',
-      redirectURLs: ['https://example.com/callback'],
+      applicationUrl: 'https://example.com',
+      redirectUrlWhitelist: ['https://example.com/callback'],
     }
 
     // When
@@ -75,7 +75,7 @@ describe('update-url', () => {
     vi.mocked(appUrlPrompt).mockResolvedValue('https://myapp.example.com')
     const options: UpdateURLOptions = {
       apiKey: 'api-key-from-flag',
-      redirectURLs: ['https://example.com/callback'],
+      redirectUrlWhitelist: ['https://example.com/callback'],
     }
 
     // When
@@ -101,7 +101,7 @@ describe('update-url', () => {
     ])
     const options: UpdateURLOptions = {
       apiKey: 'api-key-from-flag',
-      appURL: 'https://example.com',
+      applicationUrl: 'https://example.com',
     }
 
     // When

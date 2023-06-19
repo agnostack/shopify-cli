@@ -1,14 +1,15 @@
 import {AppInterface} from '../../models/app/app.js'
-import {FunctionExtension, ThemeExtension} from '../../models/app/extensions.js'
 import {OrganizationApp} from '../../models/organization.js'
-import {PartnersURLsData} from '../../api/graphql/app.js'
+import {ExtensionInstance} from '../../models/extensions/extension-instance.js'
+import {AppData} from '../../api/graphql/app.js'
 import {partnersFqdn} from '@shopify/cli-kit/node/context/fqdn'
-import {renderInfo} from '@shopify/cli-kit/node/ui'
+import {renderConcurrent, RenderConcurrentOptions, renderInfo} from '@shopify/cli-kit/node/ui'
 import {outputContent, outputInfo, outputToken} from '@shopify/cli-kit/node/output'
+import {openURL} from '@shopify/cli-kit/node/system'
 
-export async function outputUpdateURLsResult(
+export async function outputUpdateURLsData(
   updated: boolean,
-  data: PartnersURLsData,
+  data: AppData,
   app: Omit<OrganizationApp, 'apiSecretKeys' | 'apiKey'> & {apiSecret?: string},
 ) {
   const dashboardURL = await partnersURL(app.organizationId, app.id)
@@ -36,10 +37,10 @@ export async function outputUpdateURLsResult(
               '\n',
               `Current proxy URL: ${data.appProxy.url}`,
               '\n',
-              ...(data.appProxy.subPath ? [`Current proxy Subpath: ${data.appProxy.subPath}`, '\n'] : []),
               ...(data.appProxy.subPathPrefix
                 ? [`Current proxy Subpath Prefix: ${data.appProxy.subPathPrefix}`, '\n']
                 : []),
+              ...(data.appProxy.subPath ? [`Current proxy Subpath: ${data.appProxy.subPath}`, '\n'] : []),
             ]
           : []),
       ],
@@ -48,11 +49,43 @@ export async function outputUpdateURLsResult(
 }
 
 export function outputExtensionsMessages(app: AppInterface) {
-  outputFunctionsMessage(app.extensions.function)
-  outputThemeExtensionsMessage(app.extensions.theme)
+  outputFunctionsMessage(app.allExtensions.filter((ext) => ext.isFunctionExtension))
+  outputThemeExtensionsMessage(app.allExtensions.filter((ext) => ext.isThemeExtension))
 }
 
-function outputFunctionsMessage(extensions: FunctionExtension[]) {
+export function renderDev(renderConcurrentOptions: RenderConcurrentOptions, previewUrl: string | undefined) {
+  let options = renderConcurrentOptions
+
+  if (previewUrl) {
+    options = {
+      ...options,
+      onInput: (input, _key, exit) => {
+        if (input === 'p' && previewUrl) {
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+          openURL(previewUrl)
+        } else if (input === 'q') {
+          exit()
+        }
+      },
+      footer: {
+        shortcuts: [
+          {
+            key: 'p',
+            action: 'preview in your browser',
+          },
+          {
+            key: 'q',
+            action: 'quit',
+          },
+        ],
+        subTitle: `Preview URL: ${previewUrl}`,
+      },
+    }
+  }
+  return renderConcurrent(options)
+}
+
+function outputFunctionsMessage(extensions: ExtensionInstance[]) {
   if (extensions.length === 0) return
   const names = extensions.map((ext) => ext.configuration.name)
   const heading = outputToken.heading(names.join(', '))
@@ -61,7 +94,7 @@ One testing option is to use a separate app dedicated to staging.`
   outputInfo(outputContent`${heading}\n${message}\n`)
 }
 
-function outputThemeExtensionsMessage(extensions: ThemeExtension[]) {
+function outputThemeExtensionsMessage(extensions: ExtensionInstance[]) {
   if (extensions.length === 0) return
   for (const extension of extensions) {
     const message = extension.previewMessage('', '')

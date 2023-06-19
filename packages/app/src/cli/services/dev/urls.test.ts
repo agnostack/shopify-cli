@@ -7,10 +7,10 @@ import {
   FrontendURLOptions,
 } from './urls.js'
 import {testApp} from '../../models/app/app.test-data.js'
-import {AppUpdate, UpdateAppQuery} from '../../api/graphql/update_app.js'
+import {conformPartnersURLsUpdate, AppUpdate} from '../../api/graphql/app.js'
+import {UpdateAppQuery} from '../../api/graphql/update_urls.js'
 import {GetURLsQuery} from '../../api/graphql/get_urls.js'
 import {setAppInfo} from '../local-storage.js'
-import {conformPartnersURLsData} from '../../api/graphql/app.js'
 import {beforeEach, describe, expect, vi, test} from 'vitest'
 import {Config} from '@oclif/core'
 import {AbortError} from '@shopify/cli-kit/node/error'
@@ -40,7 +40,7 @@ beforeEach(() => {
 })
 
 const defaultOptions: FrontendURLOptions = {
-  app: testApp({hasUIExtensions: () => false}),
+  app: testApp(),
   noTunnel: false,
   tunnelUrl: undefined,
   commandConfig: new Config({root: ''}),
@@ -82,7 +82,7 @@ describe('updateURLsData', () => {
     const data = {
       applicationUrl: 'https://example.com',
       appProxy: {
-        url: 'https://example.com',
+        proxyUrl: 'https://example.com',
       },
       redirectUrlWhitelist: [
         'https://example.com/auth/callback',
@@ -108,8 +108,8 @@ describe('updateURLsData', () => {
     const data = {
       applicationUrl: 'https://example.com',
       appProxy: {
-        url: 'https://example.com',
-        proxyPath: 'proxy',
+        proxyUrl: 'https://example.com',
+        proxySubPath: 'proxy',
       },
       redirectUrlWhitelist: [
         'https://example.com/auth/callback',
@@ -312,7 +312,7 @@ describe('generateFrontendURL', () => {
     // Given
     const options = {
       ...defaultOptions,
-      app: testApp({hasUIExtensions: () => true}),
+      app: testApp(),
       tunnelUrl: 'https://my-tunnel-provider.io:4242',
     }
 
@@ -447,11 +447,11 @@ describe('generateFrontendURL', () => {
   })
 })
 
-describe('conformPartnersURLsData', () => {
+describe('conformPartnersURLsUpdate', () => {
   test('Returns the default values without an override', () => {
     const applicationUrl = 'http://my-base-url'
 
-    const got = conformPartnersURLsData(applicationUrl)
+    const got = conformPartnersURLsUpdate(applicationUrl)
 
     expect(got).toMatchObject({
       applicationUrl,
@@ -467,7 +467,7 @@ describe('conformPartnersURLsData', () => {
     const applicationUrl = 'http://my-base-url'
     const overrideCallbackPath = '/my/custom/path'
 
-    const got = conformPartnersURLsData(applicationUrl, {
+    const got = conformPartnersURLsUpdate(applicationUrl, {
       authCallbackPath: overrideCallbackPath,
     })
 
@@ -481,7 +481,7 @@ describe('conformPartnersURLsData', () => {
     const applicationUrl = 'http://my-base-url'
     const overrideCallbackPaths = ['/my/custom/path1', '/my/custom/path2']
 
-    const got = conformPartnersURLsData(applicationUrl, {
+    const got = conformPartnersURLsUpdate(applicationUrl, {
       authCallbackPath: overrideCallbackPaths,
     })
 
@@ -497,11 +497,11 @@ describe('conformPartnersURLsData', () => {
   test('Returns just the proxy override subPathPrefix when set', () => {
     const applicationUrl = 'http://my-base-url'
     const appProxy = {
-      url: applicationUrl,
-      subPathPrefix: 'apps',
+      proxyUrl: applicationUrl,
+      proxySubPathPrefix: 'apps',
     }
 
-    const got = conformPartnersURLsData(applicationUrl, {
+    const got = conformPartnersURLsUpdate(applicationUrl, {
       appProxy,
     })
 
@@ -514,12 +514,12 @@ describe('conformPartnersURLsData', () => {
   test('Returns the proxy overrides when set', () => {
     const applicationUrl = 'http://my-base-url'
     const appProxy = {
-      url: 'http://my-proxy-url',
-      subPathPrefix: 'apps',
-      subPath: 'proxy',
+      proxyUrl: 'http://my-proxy-url',
+      proxySubPathPrefix: 'apps',
+      proxySubPath: 'proxy',
     }
 
-    const got = conformPartnersURLsData(applicationUrl, {
+    const got = conformPartnersURLsUpdate(applicationUrl, {
       appProxy,
     })
 
@@ -533,12 +533,12 @@ describe('conformPartnersURLsData', () => {
     const applicationUrl = 'http://my-base-url'
     const overrideCallbackPaths = ['/my/custom/path1', '/my/custom/path2']
     const appProxy = {
-      url: 'http://my-proxy-url',
-      subPathPrefix: 'apps',
-      subPath: 'proxy',
+      proxyUrl: 'http://my-proxy-url',
+      proxySubPathPrefix: 'apps',
+      proxySubPath: 'proxy',
     }
 
-    const got = conformPartnersURLsData(applicationUrl, {
+    const got = conformPartnersURLsUpdate(applicationUrl, {
       appProxy,
       authCallbackPath: overrideCallbackPaths,
     })
@@ -561,7 +561,7 @@ describe('validatePartnerAppUpdate', () => {
     const redirectUrlWhitelist = ['http://example.com/callback1', 'http://example.com/callback2']
     const proxyUrl = 'http://example-proxy.com'
     const proxySubPath = 'proxy'
-    const data: AppUpdate = {applicationUrl, redirectUrlWhitelist, proxyUrl, proxySubPath}
+    const data: AppUpdate = {applicationUrl, redirectUrlWhitelist, appProxy: {proxyUrl, proxySubPath}}
 
     // When/Then
     validatePartnerAppUpdate(data)
@@ -592,7 +592,7 @@ describe('validatePartnerAppUpdate', () => {
     const applicationUrl = 'http://example.com'
     const redirectUrlWhitelist = ['http://example.com/callback1', 'http://example.com/callback2']
     const proxyUrl = 'wrong'
-    const data: AppUpdate = {applicationUrl, redirectUrlWhitelist, proxyUrl}
+    const data: AppUpdate = {applicationUrl, redirectUrlWhitelist, appProxy: {proxyUrl}}
 
     // When/Then
     expect(() => validatePartnerAppUpdate(data)).toThrow(/Invalid application Proxy URL/)

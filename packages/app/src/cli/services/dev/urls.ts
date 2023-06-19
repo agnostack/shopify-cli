@@ -1,9 +1,9 @@
 import {setAppInfo} from '../local-storage.js'
 import {updateURLsPrompt} from '../../prompts/dev.js'
 import {AppInterface} from '../../models/app/app.js'
-import {UpdateAppQuery, UpdateAppQuerySchema, AppUpdateInput, AppUpdate} from '../../api/graphql/update_app.js'
+import {UpdateAppQuery, UpdateAppQuerySchema, AppUpdateInput} from '../../api/graphql/update_urls.js'
 import {GetURLsQuery, GetURLsQuerySchema, GetURLsQueryVariables} from '../../api/graphql/get_urls.js'
-import {PartnersURLsData} from '../../api/graphql/app.js'
+import {AppUpdate, AppData} from '../../api/graphql/app.js'
 import {AbortError, BugError} from '@shopify/cli-kit/node/error'
 import {Config} from '@oclif/core'
 import {getAvailableTCPPort} from '@shopify/cli-kit/node/tcp'
@@ -21,7 +21,7 @@ export interface FrontendURLOptions {
   noTunnel: boolean
   tunnelUrl?: string
   commandConfig: Config
-  tunnelClient: TunnelClient
+  tunnelClient: TunnelClient | undefined
 }
 
 export interface FrontendURLResult {
@@ -44,7 +44,7 @@ export interface FrontendURLResult {
  */
 export async function generateFrontendURL(options: FrontendURLOptions): Promise<FrontendURLResult> {
   let frontendPort = 4040
-  let frontendUrl: string
+  let frontendUrl = ''
   let usingLocalhost = false
 
   if (codespaceURL()) {
@@ -81,7 +81,7 @@ export async function generateFrontendURL(options: FrontendURLOptions): Promise<
     frontendPort = await getAvailableTCPPort()
     frontendUrl = 'http://localhost'
     usingLocalhost = true
-  } else {
+  } else if (options.tunnelClient) {
     const url = await pollTunnelURL(options.tunnelClient)
     frontendPort = options.tunnelClient.port
     frontendUrl = url
@@ -99,7 +99,7 @@ async function pollTunnelURL(tunnelClient: TunnelClient): Promise<string> {
     const pollTunnelStatus = async () => {
       const result = tunnelClient.getTunnelStatus()
       outputDebug(`Polling tunnel status for ${tunnelClient.provider} (attempt ${retries}): ${result.status}`)
-      if (result.status === 'error') return reject(new BugError(result.message))
+      if (result.status === 'error') return reject(new BugError(result.message, result.tryMessage))
       if (result.status === 'connected') {
         resolve(result.url)
       } else {
@@ -117,7 +117,7 @@ async function pollTunnelURL(tunnelClient: TunnelClient): Promise<string> {
   })
 }
 
-export async function updateURLsData(data: AppUpdate, apiKey: string, token: string): Promise<PartnersURLsData> {
+export async function updateURLsData(data: AppUpdate, apiKey: string, token: string): Promise<AppData> {
   const variables: AppUpdateInput = {apiKey, ...data}
   const query = UpdateAppQuery
   const result = await partnersRequest<UpdateAppQuerySchema>(query, token, variables)
@@ -128,7 +128,7 @@ export async function updateURLsData(data: AppUpdate, apiKey: string, token: str
   return result.appUpdate.app
 }
 
-export async function getURLsData(apiKey: string, token: string): Promise<PartnersURLsData> {
+export async function getURLsData(apiKey: string, token: string): Promise<AppData> {
   const variables: GetURLsQueryVariables = {apiKey}
   const query = GetURLsQuery
   const result: GetURLsQuerySchema = await partnersRequest(query, token, variables)
@@ -140,7 +140,7 @@ export async function getURLsData(apiKey: string, token: string): Promise<Partne
 }
 
 export interface ShouldOrPromptUpdateURLsOptions {
-  currentURLsData: PartnersURLsData
+  currentURLsData: AppData
   appDirectory: string
   cachedUpdateURLs?: boolean
   newApp?: boolean
@@ -155,6 +155,7 @@ export async function shouldOrPromptUpdateURLs(options: ShouldOrPromptUpdateURLs
       options.currentURLsData.redirectUrlWhitelist,
       options.currentURLsData.appProxy,
     )
+
     let newUpdateURLsData: boolean | undefined
     /* eslint-disable no-fallthrough */
     switch (response) {
@@ -186,8 +187,11 @@ export function validatePartnerAppUpdate(data: AppUpdate): void {
       )
   })
 
-  if (data.proxyUrl && !isValidURL(data.proxyUrl))
-    throw new AbortError(`Invalid application Proxy URL: ${data.proxyUrl}`, 'Valid format: "https://example.com"')
+  if (data.appProxy && !isValidURL(data.appProxy.proxyUrl))
+    throw new AbortError(
+      `Invalid application Proxy URL: ${data.appProxy.proxyUrl}`,
+      'Valid format: "https://example.com"',
+    )
 }
 
 export async function startTunnelPlugin(config: Config, port: number, provider: string): Promise<TunnelClient> {

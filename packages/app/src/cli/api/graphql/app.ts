@@ -33,6 +33,8 @@ export interface PartnerAppUpdateOptions {
   appProxy?: AppProxyInput
 }
 
+const ensureValidPath = (arg: string, baseURL: string) => (!arg.startsWith('http') ? `${baseURL}${arg}` : arg)
+
 export function conformPartnersURLsUpdate(baseURL: string, appUpdateOptions?: PartnerAppUpdateOptions): AppUpdate {
   const authCallbackPath = appUpdateOptions?.authCallbackPath
 
@@ -41,9 +43,7 @@ export function conformPartnersURLsUpdate(baseURL: string, appUpdateOptions?: Pa
     const authCallbackPaths = Array.isArray(authCallbackPath) ? authCallbackPath : [authCallbackPath]
     redirectUrlWhitelist = authCallbackPaths.reduce<string[]>((acc, authCallbackPath) => {
       if (authCallbackPath && authCallbackPath.length > 0) {
-        // hmmm: revisit
-        const authCallbackURL = authCallbackPath.startsWith('http') ? authCallbackPath : `${baseURL}${authCallbackPath}`
-        acc.push(authCallbackURL)
+        acc.push(ensureValidPath(authCallbackPath, baseURL))
       }
       return acc
     }, [])

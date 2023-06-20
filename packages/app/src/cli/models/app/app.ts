@@ -17,16 +17,17 @@ export enum WebType {
   Backend = 'backend',
 }
 
-const ensurePathStartsWithSlash = (arg: unknown) => (typeof arg === 'string' && !arg.startsWith('/') ? `/${arg}` : arg)
+const ensureValidPath = (arg: unknown) =>
+  typeof arg === 'string' && !arg.startsWith('http') && !arg.startsWith('/') ? `/${arg}` : arg
 
-const WebConfigurationAuthCallbackPathSchema = zod.preprocess(ensurePathStartsWithSlash, zod.string())
+const WebConfigurationAuthCallbackPathSchema = zod.preprocess(ensureValidPath, zod.string())
 
 export const WebConfigurationSchema = zod.object({
   type: zod.enum([WebType.Frontend, WebType.Backend]).default(WebType.Frontend),
   authCallbackPath: zod
     .union([WebConfigurationAuthCallbackPathSchema, WebConfigurationAuthCallbackPathSchema.array()])
     .optional(),
-  webhooksPath: zod.preprocess(ensurePathStartsWithSlash, zod.string()).optional(),
+  webhooksPath: zod.preprocess(ensureValidPath, zod.string()).optional(),
   port: zod.number().max(65536).min(0).optional(),
   appProxy: zod
     .object({
